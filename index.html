@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mystic Tarot</title>
+    <title>INTARIUS</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400&display=swap"
         rel="stylesheet">
@@ -172,30 +172,16 @@
         }
 
         .card-shaking {
-            animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+            animation: flipCard 1s ease-in-out both;
         }
 
-        @keyframes shake {
-
-            10%,
-            90% {
-                transform: translate3d(-1px, 0, 0);
+        @keyframes flipCard {
+            0% {
+                transform: rotateY(0deg);
             }
 
-            20%,
-            80% {
-                transform: translate3d(2px, 0, 0);
-            }
-
-            30%,
-            50%,
-            70% {
-                transform: translate3d(-4px, 0, 0);
-            }
-
-            40%,
-            60% {
-                transform: translate3d(4px, 0, 0);
+            100% {
+                transform: rotateY(180deg);
             }
         }
 
@@ -300,7 +286,7 @@
         }
 
         .result-card-container {
-            perspective: 1000px;
+            perspective: 1200px;
             width: var(--card-width);
             height: var(--card-height);
         }
@@ -310,8 +296,8 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.8s;
-            animation: cardAppear 1s ease-out forwards;
+            transition: transform 1.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+            will-change: transform;
         }
 
         .card-face {
@@ -322,6 +308,7 @@
             border-radius: 12px;
             border: 2px solid var(--accent-gold);
             overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
         .card-face.front {
@@ -336,15 +323,39 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            box-shadow:
+                0 0 30px rgba(255, 215, 0, 0.2),
+                inset 0 0 60px rgba(75, 0, 130, 0.3);
         }
 
         .card-face.back i {
             font-size: 3rem;
             color: var(--accent-gold);
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                opacity: 0.7;
+                text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            }
+
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 25px rgba(255, 215, 0, 0.9);
+            }
         }
 
         .result-card.flipped {
             transform: rotateY(180deg);
+        }
+
+        .result-card.flipped .card-face.front {
+            box-shadow:
+                0 0 40px rgba(255, 215, 0, 0.3),
+                0 20px 50px rgba(0, 0, 0, 0.4);
         }
 
         .card-image {
@@ -370,12 +381,32 @@
             width: 100%;
             padding: 0 10px;
             margin-bottom: 30px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .card-info.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .card-short {
             margin-bottom: 20px;
             font-style: italic;
             color: var(--text-secondary);
+        }
+
+        /* Premium synthesis block animation */
+        .synthesis-block {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1s ease-out, transform 1s ease-out;
+        }
+
+        .synthesis-block.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .btn {
@@ -410,6 +441,26 @@
             font-size: 0.9rem;
         }
 
+        .btn-gold {
+            background: linear-gradient(45deg, var(--accent-gold), #b8860b);
+            color: #000;
+            border: none;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .advice-box {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .advice-label {
+            color: var(--accent-gold);
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
         /* Dev Button */
         .dev-btn {
             position: fixed;
@@ -429,6 +480,37 @@
             color: var(--accent-gold);
             border-color: var(--accent-gold);
             opacity: 1;
+        }
+
+        /* Premium Content Blur Effect */
+        .premium-content {
+            transition: filter 0.5s ease;
+        }
+
+        .premium-content.blurred {
+            filter: blur(8px);
+            user-select: none;
+        }
+
+        .unlock-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 5;
+            transition: opacity 0.3s;
+            border-radius: 12px;
+        }
+
+        .unlock-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
 
         .ad-loader {
@@ -553,94 +635,94 @@
     <script>
         // --- Data ---
         const MAJOR_ARCANA = [
-            { id: 0, name: "0. Шут", image: "https://upload.wikimedia.org/wikipedia/en/9/90/RWS_Tarot_00_Fool.jpg", short: "Новое начало, свобода, спонтанность", full: "Шут — это символ чистого потенциала. Вы стоите на краю пропасти, готовые шагнуть в неизвестное. Это карта новых начинаний, когда старый багаж оставлен позади. Она призывает довериться Вселенной и позволить себе быть немного безрассудным.", advice: "Рискните и начните с чистого листа." },
-            { id: 1, name: "I. Маг", image: "https://upload.wikimedia.org/wikipedia/en/d/de/RWS_Tarot_01_Magician.jpg", short: "Сила воли, мастерство, ресурсы", full: "Маг напоминает, что у вас есть все необходимые инструменты для достижения цели. Вы — творец своей реальности. Сейчас идеальное время для активных действий и реализации задуманного.", advice: "Используйте свои навыки и действуйте уверенно." },
-            { id: 2, name: "II. Жрица", image: "https://upload.wikimedia.org/wikipedia/en/8/88/RWS_Tarot_02_High_Priestess.jpg", short: "Интуиция, тайны, подсознание", full: "Жрица призывает обратиться к своему внутреннему миру. Логика сейчас бессильна, ответы лежат в снах и предчувствиях. Это время пассивного ожидания и наблюдения.", advice: "Слушайте свой внутренний голос." },
-            { id: 3, name: "III. Императрица", image: "https://upload.wikimedia.org/wikipedia/en/d/d2/RWS_Tarot_03_Empress.jpg", short: "Плодородие, изобилие, забота", full: "Императрица — это архетип Матери. Она несет энергию роста, процветания и чувственности. Это отличное время для творчества, заботы о себе и близких, а также для финансовых дел.", advice: "Наслаждайтесь жизнью и будьте щедры." },
-            { id: 4, name: "IV. Император", image: "https://upload.wikimedia.org/wikipedia/en/c/c3/RWS_Tarot_04_Emperor.jpg", short: "Власть, структура, дисциплина", full: "Император требует порядка. Хаос должен быть структурирован. Это карта лидера, отца, начальника. Она говорит о необходимости следовать правилам и брать на себя ответственность.", advice: "Наведите порядок в делах и мыслях." },
-            { id: 5, name: "V. Иерофант", image: "https://upload.wikimedia.org/wikipedia/en/8/8d/RWS_Tarot_05_Hierophant.jpg", short: "Традиция, обучение, духовность", full: "Иерофант символизирует установленные нормы и передачу знаний. Возможно, вам нужен совет наставника или следование проверенным путем. Это не время для бунта.", advice: "Следуйте традициям и учитесь у мудрых." },
-            { id: 6, name: "VI. Влюбленные", image: "https://upload.wikimedia.org/wikipedia/en/d/db/RWS_Tarot_06_Lovers.jpg", short: "Выбор, союз, гармония", full: "Влюбленные — это не только про романтику, но и про важный жизненный выбор, который нужно сделать сердцем. Это карта союза противоположностей и поиска гармонии.", advice: "Выбирайте сердцем, а не только разумом." },
-            { id: 7, name: "VII. Колесница", image: "https://upload.wikimedia.org/wikipedia/en/9/9b/RWS_Tarot_07_Chariot.jpg", short: "Победа, движение, контроль", full: "Колесница означает триумф воли. Вы движетесь вперед, несмотря на препятствия. Главное здесь — держать поводья в руках и не давать эмоциям сбить вас с пути.", advice: "Двигайтесь к цели, не сбавляя темпа." },
-            { id: 8, name: "VIII. Сила", image: "https://upload.wikimedia.org/wikipedia/en/f/f5/RWS_Tarot_08_Strength.jpg", short: "Внутренняя сила, терпение", full: "Настоящая сила не в агрессии, а в мягкости и терпении. Вы способны укротить своего внутреннего зверя любовью и пониманием. Вы сильнее, чем думаете.", advice: "Проявите терпение и великодушие." },
-            { id: 9, name: "IX. Отшельник", image: "https://upload.wikimedia.org/wikipedia/en/4/4d/RWS_Tarot_09_Hermit.jpg", short: "Уединение, поиск истины", full: "Отшельник уходит от суеты мира, чтобы найти ответы внутри себя. Это период самоанализа. Вам нужно побыть одному, чтобы понять, куда двигаться дальше.", advice: "Возьмите паузу и побудьте наедине с собой." },
-            { id: 10, name: "X. Колесо Фортуны", image: "https://upload.wikimedia.org/wikipedia/en/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg", short: "Перемены, судьба, цикл", full: "Жизнь циклична — то вверх, то вниз. Колесо напоминает, что все временно. Ждите перемен, которые не зависят от вас. Доверьтесь потоку событий.", advice: "Примите перемены как неизбежное благо." },
-            { id: 11, name: "XI. Справедливость", image: "https://upload.wikimedia.org/wikipedia/en/e/e0/RWS_Tarot_11_Justice.jpg", short: "Закон, правда, карма", full: "Что посеешь, то и пожнешь. Справедливость требует честности перед собой и другими. Решение будет принято объективно. Если вы правы — не бойтесь.", advice: "Будьте честны и объективны." },
-            { id: 12, name: "XII. Повешенный", image: "https://upload.wikimedia.org/wikipedia/en/2/2b/RWS_Tarot_12_Hanged_Man.jpg", short: "Жертва, пауза, другой взгляд", full: "Ситуация зависла, и биться головой об стену бесполезно. Нужно изменить угол зрения. Иногда нужно чем-то пожертвовать, чтобы получить большее.", advice: "Посмотрите на ситуацию под другим углом." },
-            { id: 13, name: "XIII. Смерть", image: "https://upload.wikimedia.org/wikipedia/en/d/d7/RWS_Tarot_13_Death.jpg", short: "Трансформация, конец, обновление", full: "Не бойтесь, это не физическая смерть. Это конец, который необходим для нового начала. Что-то в вашей жизни отжило свое. Отпустите это.", advice: "Отпустите прошлое, чтобы впустить будущее." },
-            { id: 14, name: "XIV. Умеренность", image: "https://upload.wikimedia.org/wikipedia/en/f/f8/RWS_Tarot_14_Temperance.jpg", short: "Баланс, исцеление, мера", full: "Ангел переливает воду из кубка в кубок, ища идеальную пропорцию. Это карта золотой середины. Избегайте крайностей, ищите компромисс и душевный покой.", advice: "Соблюдайте меру во всем." },
-            { id: 15, name: "XV. Дьявол", image: "https://upload.wikimedia.org/wikipedia/en/5/55/RWS_Tarot_15_Devil.jpg", short: "Зависимость, искушение, эго", full: "Дьявол показывает наши теневые стороны, зависимости и материальные привязки. Вы можете чувствовать себя в ловушке, но цепи часто висят свободно. Выбор за вами.", advice: "Осознайте свои слабости и освободитесь от них." },
-            { id: 16, name: "XVI. Башня", image: "https://upload.wikimedia.org/wikipedia/en/5/53/RWS_Tarot_16_Tower.jpg", short: "Крах, внезапна перемена, прозрение", full: "Молния ударяет в башню, разрушая ложные структуры. Это больно, но необходимо. Иллюзии рушатся, чтобы вы увидели правду. Стройте заново на прочном фундаменте.", advice: "Не цепляйтесь за то, что рушится." },
-            { id: 17, name: "XVII. Звезда", image: "https://upload.wikimedia.org/wikipedia/en/d/db/RWS_Tarot_17_Star.jpg", short: "Надежда, вдохновение, путь", full: "После бури Башни всегда выходит Звезда. Это карта исцеления, веры и спокойствия. Вселенная благословляет вас. Идите за своей мечтой.", advice: "Верьте в свою мечту и следуйте за ней." },
-            { id: 18, name: "XVIII. Луна", image: "https://upload.wikimedia.org/wikipedia/en/7/7f/RWS_Tarot_18_Moon.jpg", short: "Иллюзии, страхи, неясность", full: "В лунном свете все выглядит не так, как днем. Это время страхов, сомнений и обмана. Доверяйте интуиции, но проверяйте факты. Не все так, как кажется.", advice: "Будьте осторожны, в темноте скрываются тайны." },
-            { id: 19, name: "XIX. Солнце", image: "https://upload.wikimedia.org/wikipedia/en/1/17/RWS_Tarot_19_Sun.jpg", short: "Счастье, успех, ясность", full: "Самая лучшая карта в колоде. Солнце — это чистая радость, успех, признание и тепло. Все проблемы позади, наслаждайтесь моментом триумфа.", advice: "Сияйте и дарите тепло окружающим." },
-            { id: 20, name: "XX. Суд", image: "https://upload.wikimedia.org/wikipedia/en/d/dd/RWS_Tarot_20_Judgement.jpg", short: "Возрождение, призыв, итог", full: "Труба зовет. Это момент пробуждения и принятия важного решения, которое изменит жизнь. Старый этап завершен, подведены итоги.", advice: "Примите важное решение и начните новую жизнь." },
-            { id: 21, name: "XXI. Мир", image: "https://upload.wikimedia.org/wikipedia/en/f/ff/RWS_Tarot_21_World.jpg", short: "Завершение, гармония, целостность", full: "Цикл завершен. Вы достигли цели и обрели гармонию. Это карта абсолютного успеха и единения с Вселенной. Наслаждайтесь своим достижением.", advice: "Празднуйте свой успех, вы пришли домой." }
+            { id: 0, name: "0. Шут", narrative: "сделать смелый шаг в неизвестность", element: "air", keywords: ["начало", "свобода", "риск", "потенциал"], image: "https://upload.wikimedia.org/wikipedia/en/9/90/RWS_Tarot_00_Fool.jpg", short: "Новое начало, свобода духа", full: "Знаешь это чувство, когда хочется всё бросить и начать с нуля? Шут — именно об этом. Ты стоишь на краю чего-то нового, и да, немного страшно. Но внутри тебя живёт ребёнок, который верит в чудеса. Доверься ему. Иногда лучший план — это отсутствие плана.", advice: "Рискни. Прыгни. Сетка появится." },
+            { id: 1, name: "I. Маг", narrative: "взять инициативу в свои руки", element: "air", keywords: ["воля", "мастерство", "действие", "ресурсы"], image: "https://upload.wikimedia.org/wikipedia/en/d/de/RWS_Tarot_01_Magician.jpg", short: "Мастерство, сила воли", full: "У тебя есть всё, чтобы сотворить чудо. Маг говорит: 'Ты — творец своей реальности'. Все инструменты разложены перед тобой. Не жди знака свыше — ты сам и есть этот знак. Действуй уверенно, и мир прогнётся под тебя.", advice: "Действуй. Всё в твоих руках." },
+            { id: 2, name: "II. Жрица", narrative: "довериться скрытой интуиции", element: "water", keywords: ["интуиция", "тайна", "пассивность", "знание"], image: "https://upload.wikimedia.org/wikipedia/en/8/88/RWS_Tarot_02_High_Priestess.jpg", short: "Интуиция, тайное знание", full: "Тсс... Слышишь? Это твой внутренний голос. Жрица просит выключить логику и послушать тишину. Ответы не во внешнем мире, они уже внутри тебя. Доверься своим снам и предчувствиям. Они не врут.", advice: "Слушай интуицию, а не логику." },
+            { id: 3, name: "III. Императрица", narrative: "раскрыть творческий потенциал", element: "earth", keywords: ["изобилие", "творчество", "рост", "плодородие"], image: "https://upload.wikimedia.org/wikipedia/en/d/d2/RWS_Tarot_03_Empress.jpg", short: "Изобилие, творчество", full: "Жизнь бьёт ключом! Это время расцвета, красоты и удовольствий. Императрица — это мама-природа, которая говорит: 'Расслабься и позволь себе творить'. Рождай идеи, проекты или просто уют вокруг себя.", advice: "Твори и наслаждайся жизнью." },
+            { id: 4, name: "IV. Император", narrative: "навести порядок и взять контроль", element: "fire", keywords: ["власть", "структура", "порядок", "контроль"], image: "https://upload.wikimedia.org/wikipedia/en/c/c3/RWS_Tarot_04_Emperor.jpg", short: "Власть, структура", full: "Пора навести порядок. Хватит хаоса! Император требует дисциплины и чёткого плана. Ты сейчас босс, и ответственность на тебе. Строй фундамент, устанавливай правила и защищай свою территорию.", advice: "Возьми ответственность на себя." },
+            { id: 5, name: "V. Иерофант", narrative: "следовать проверенным традициям", element: "earth", keywords: ["традиция", "обучение", "мораль", "наставник"], image: "https://upload.wikimedia.org/wikipedia/en/8/8d/RWS_Tarot_05_Hierophant.jpg", short: "Традиции, обучение", full: "Иногда нужно следовать правилам. Иерофант — это мудрый учитель или наставник. Он говорит, что сейчас не время для бунта. Учись, следуй традициям или ищи совета у того, кто знает больше.", advice: "Следуй правилам и учись." },
+            { id: 6, name: "VI. Влюбленные", narrative: "сделать выбор сердцем", element: "air", keywords: ["выбор", "любовь", "союз", "гармония"], image: "https://upload.wikimedia.org/wikipedia/en/d/db/RWS_Tarot_06_Lovers.jpg", short: "Любовь, важный выбор", full: "Это не только про романтику. Это про ВЫБОР. Выбор сердцем. Ты стоишь на развилке: пойти за разумом или за чувствами? Влюблённые советуют выбрать то, что заставляет твоё сердце петь. Объединяйся с другими.", advice: "Выбирай сердцем." },
+            { id: 7, name: "VII. Колесница", narrative: "двигаться к цели несмотря ни на что", element: "water", keywords: ["победа", "движение", "прорыв", "контроль"], image: "https://upload.wikimedia.org/wikipedia/en/9/9b/RWS_Tarot_07_Chariot.jpg", short: "Победа, движение вперёд", full: "Газ в пол! Никаких сомнений. Ты взял поводья в свои руки, и теперь только вперёд. Препятствия будут, но ты проедешь по ним танком. Главное — держи фокус на цели и не отвлекайся.", advice: "Двигайся к цели, не останавливайся." },
+            { id: 8, name: "VIII. Сила", narrative: "проявить мягкую, но твердую силу", element: "fire", keywords: ["сила", "терпение", "смелость", "страсть"], image: "https://upload.wikimedia.org/wikipedia/en/f/f5/RWS_Tarot_08_Strength.jpg", short: "Внутренняя сила, терпение", full: "Настоящая сила не в мускулах, а в мягкости. Ты можешь укротить своего внутреннего льва не кнутом, а любовью. Сейчас тебе нужно терпение и уверенность в себе. Ты сильнее, чем думаешь. Справься со зверем внутри.", advice: "Будь мягче, но увереннее." },
+            { id: 9, name: "IX. Отшельник", narrative: "уйти в себя для поиска ответов", element: "earth", keywords: ["поиск", "одиночество", "мудрость", "анализ"], image: "https://upload.wikimedia.org/wikipedia/en/4/4d/RWS_Tarot_09_Hermit.jpg", short: "Поиск себя, мудрость", full: "Выключи телефон. Закрой дверь. Тебе нужно побыть одному. Ответы, которые ты ищешь, не в гугле, а в твоей голове. Отшельник — это пауза, чтобы найти свой свет во тьме. Не бойся одиночества, бойся шума.", advice: "Найди время для тишины." },
+            { id: 10, name: "X. Колесо Фортуны", narrative: "довериться циклу перемен", element: "fire", keywords: ["удача", "перемены", "судьба", "цикл"], image: "https://upload.wikimedia.org/wikipedia/en/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg", short: "Удача, перемены", full: "Всё меняется! Сегодня ты наверху, завтра... кто знает? Но сейчас Колесо крутится в твою пользу. Лови момент! Это судьба вмешивается в твои планы. Доверься потоку, сопротивляться бесполезно.", advice: "Доверься переменам. Всё к лучшему." },
+            { id: 11, name: "XI. Справедливость", narrative: "взвесить всё и принять честное решение", element: "air", keywords: ["правда", "закон", "баланс", "решение"], image: "https://upload.wikimedia.org/wikipedia/en/e/e0/RWS_Tarot_11_Justice.jpg", short: "Честность, ответственность", full: "Что посеешь, то и пожнёшь. Всё просто. Справедливость требует честности — перед собой и другими. Если ты был прав, ты победишь. Если нет — прими урок. Сейчас нужен холодный ум и факты.", advice: "Будь честен и объективен." },
+            { id: 12, name: "XII. Повешенный", narrative: "посмотреть на вещи под другим углом", element: "water", keywords: ["жертва", "пауза", "новый взгляд", "ожидание"], image: "https://upload.wikimedia.org/wikipedia/en/2/2b/RWS_Tarot_12_Hanged_Man.jpg", short: "Взгляни иначе", full: "Застрял? Бьёшься головой об стену? Повешенный советует: переверни картинку. Буквально посмотри на ситуацию вверх ногами. Иногда нужно отпустить контроль и просто подождать. Пазл сложится сам.", advice: "Отпусти. Позволь жизни течь." },
+            { id: 13, name: "XIII. Смерть", narrative: "отпустить старое ради нового", element: "water", keywords: ["конец", "трансформация", "переход", "обновление"], image: "https://upload.wikimedia.org/wikipedia/en/d/d7/RWS_Tarot_13_Death.jpg", short: "Конец и начало", full: "Не пугайся! Это не про физическую смерть. Это про то, что что-то в твоей жизни отжило своё. Отношения, работа, старые привычки — что-то должно уйти, чтобы пришло новое. Отпусти то, что держит тебя.", advice: "Попрощайся с прошлым. Будущее ждёт." },
+            { id: 14, name: "XIV. Умеренность", narrative: "найти гармонию и золотую середину", element: "fire", keywords: ["баланс", "исцеление", "терпение", "синтез"], image: "https://upload.wikimedia.org/wikipedia/en/f/f8/RWS_Tarot_14_Temperance.jpg", short: "Баланс — это искусство", full: "Слишком много работы? Слишком много отдыха? Умеренность напоминает: крайности разрушают. Найди золотую середину. Смешай воду и вино в правильных пространствах. Гармония — твой главный друг сейчас.", advice: "Не впадай в крайности. Найди баланс." },
+            { id: 15, name: "XV. Дьявол", narrative: "осознать свои зависимости", element: "earth", keywords: ["зависимость", "материализм", "искушение", "страх"], image: "https://upload.wikimedia.org/wikipedia/en/5/55/RWS_Tarot_15_Devil.jpg", short: "Цепи иллюзий", full: "Чувствуешь себя в ловушке? Посмотри внимательно на свои 'цепи'. Они свободно висят на шее — просто сними их! Дьявол показывает зависимости, страхи, токсичные связи. Ты сам выбираешь оставаться или уйти.", advice: "Освободи себя. Выбор за тобой." },
+            { id: 16, name: "XVI. Башня", narrative: "пережить резкое очищение", element: "fire", keywords: ["крах", "разрушение", "шок", "освобождение"], image: "https://upload.wikimedia.org/wikipedia/en/5/53/RWS_Tarot_16_Tower.jpg", short: "Гроза очищает", full: "Больно? Да. Страшно? Ещё бы. Но Башня рушится, чтобы ты увидел правду, которую не хотел замечать. После грозы воздух чище, после слёз легче. Это не конец — это жёсткий перезапуск.", advice: "Не держись за то, что падает. Строй новое." },
+            { id: 17, name: "XVII. Звезда", narrative: "обрести надежду и вдохновение", element: "air", keywords: ["надежда", "вдохновение", "исцеление", "вера"], image: "https://upload.wikimedia.org/wikipedia/en/d/db/RWS_Tarot_17_Star.jpg", short: "Надежда светит", full: "После самой тёмной ночи всегда выходят звёзды. Ты прошёл через многое, и теперь Вселенная посылает тебе знак: всё будет хорошо. Верь в свою мечту. Она ближе, чем кажется.", advice: "Не теряй надежду. Ты на правильном пути." },
+            { id: 18, name: "XVIII. Луна", narrative: "пройти сквозь туман иллюзий", element: "water", keywords: ["иллюзия", "страх", "подсознание", "сны"], image: "https://upload.wikimedia.org/wikipedia/en/7/7f/RWS_Tarot_18_Moon.jpg", short: "Не всё так, как кажется", full: "В лунном свете всё выглядит иначе. Страхи кажутся больше, а люди — загадочнее. Луна предупреждает: не доверяй первому впечатлению. Проверяй факты. Жди рассвета, прежде чем принимать решения.", advice: "Будь осторожен(на) с иллюзиями." },
+            { id: 19, name: "XIX. Солнце", narrative: "насладиться ясностью и успехом", element: "fire", keywords: ["радость", "успех", "энергия", "ясность"], image: "https://upload.wikimedia.org/wikipedia/en/1/17/RWS_Tarot_19_Sun.jpg", short: "Радость и победа!", full: "Это лучшая карта в колоде! Солнце сияет, ребёнок смеётся, всё получается. Успех, признание, чистая радость — всё это твоё прямо сейчас. Наслаждайся! Ты это заслужил(а).", advice: "Сияй! Разреши себе быть счастливым." },
+            { id: 20, name: "XX. Суд", narrative: "ответить на призыв судьбы", element: "fire", keywords: ["возрождение", "призыв", "прощение", "судьба"], image: "https://upload.wikimedia.org/wikipedia/en/d/dd/RWS_Tarot_20_Judgement.jpg", short: "Время пробуждения", full: "Слышишь? Это труба зовёт тебя. Суд — это момент истины, когда ты понимаешь своё предназначение. Пора проснуться, оставить прошлое позади и ответить на свой высший призыв.", advice: "Прислушайся к внутреннему голосу. Он знает." },
+            { id: 21, name: "XXI. Мир", narrative: "достичь полной гармонии", element: "earth", keywords: ["завершение", "целостность", "путешествие", "успех"], image: "https://upload.wikimedia.org/wikipedia/en/f/ff/RWS_Tarot_21_World.jpg", short: "Ты дошёл до финиша", full: "Поздравляю! Ты сделал это. Цикл завершён, цель достигнута, круг замкнулся. Мир — это карта абсолютной гармонии и завершённости. Наслаждайся моментом, а потом... готовься к новому путешествию.", advice: "Празднуй! Ты заслужил(а) это." }
         ];
 
         const MINOR_ARCANA = [
-            // Wands (Жезлы)
-            { id: 22, name: "Туз Жезлов", image: "https://upload.wikimedia.org/wikipedia/en/1/11/Wands01.jpg", short: "Вдохновение, новая идея", full: "Искра творчества и мощный импульс энергии. Отличное время для старта новых проектов.", advice: "Действуйте смело!" },
-            { id: 23, name: "Двойка Жезлов", image: "https://upload.wikimedia.org/wikipedia/en/0/0f/Wands02.jpg", short: "Планирование, выбор", full: "Вы стоите на пороге и смотрите вдаль. Весь мир перед вами, но нужно составить план.", advice: "Продумайте стратегию." },
-            { id: 24, name: "Тройка Жезлов", image: "https://upload.wikimedia.org/wikipedia/en/f/ff/Wands03.jpg", short: "Первые успехи, расширение", full: "Ваши корабли возвращаются с золотом. Проекты начинают приносить плоды.", advice: "Смотрите шире, ищите новые горизонты." },
-            { id: 25, name: "Четверка Жезлов", image: "https://upload.wikimedia.org/wikipedia/en/a/a4/Wands04.jpg", short: "Праздник, стабильность", full: "Время радости, отдыха и празднования достигнутого. Гармония в доме.", advice: "Отпразднуйте свои успехи." },
-            { id: 26, name: "Пятерка Жезлов", image: "https://upload.wikimedia.org/wikipedia/en/9/9d/Wands05.jpg", short: "Конкуренция, борьба", full: "Столкновение интересов, споры и соревнование. Это не война, а скорее спортивная борьба.", advice: "Докажите свое мастерство." },
-            { id: 27, name: "Шестерка Жезлов", image: "https://upload.wikimedia.org/wikipedia/en/3/3b/Wands06.jpg", short: "Победа, признание", full: "Вы — победитель на коне. Общественное признание и успех.", advice: "Примите похвалу, вы это заслужили." },
-            { id: 28, name: "Семерка Жезлов", image: "https://upload.wikimedia.org/wikipedia/en/e/e4/Wands07.jpg", short: "Защита, стойкость", full: "Вы на вершине, но многие хотят занять ваше место. Придется отстаивать свои границы.", advice: "Не сдавайте позиций." },
-            { id: 29, name: "Восьмерка Жезлов", image: "https://upload.wikimedia.org/wikipedia/en/6/6b/Wands08.jpg", short: "Скорость, новости", full: "События развиваются стремительно. Ждите новостей или быстрой развязки ситуации.", advice: "Действуйте без промедления." },
-            { id: 30, name: "Девятка Жезлов", image: "https://upload.wikimedia.org/wikipedia/en/4/4f/Wands09.jpg", short: "Усталость, оборона", full: "Битва была долгой, вы ранены, но не сломлены. Остался последний рывок.", advice: "Будьте бдительны и не сдавайтесь." },
-            { id: 31, name: "Десятка Жезлов", image: "https://upload.wikimedia.org/wikipedia/en/0/0b/Wands10.jpg", short: "Бремя, ответственность", full: "Вы взвалили на себя слишком много. Тяжелая ноша мешает видеть дорогу.", advice: "Делегируйте обязанности." },
-            { id: 32, name: "Паж Жезлов", image: "https://upload.wikimedia.org/wikipedia/en/6/6a/Wands11.jpg", short: "Энтузиазм, весть", full: "Юношеский задор, любопытство и жажда приключений. Хорошие новости.", advice: "Будьте открыты новому." },
-            { id: 33, name: "Рыцарь Жезлов", image: "https://upload.wikimedia.org/wikipedia/en/1/16/Wands12.jpg", short: "Импульсивность, страсть", full: "Огонь действия. Рыцарь несется вперед, сметая преграды. Остерегайтесь поспешности.", advice: "Направьте энергию в мирное русло." },
-            { id: 34, name: "Королева Жезлов", image: "https://upload.wikimedia.org/wikipedia/en/0/0d/Wands13.jpg", short: "Харизма, уверенность", full: "Женщина-лидер, яркая, независимая и притягательная. Она знает, чего хочет.", advice: "Верьте в себя и сияйте." },
-            { id: 35, name: "Король Жезлов", image: "https://upload.wikimedia.org/wikipedia/en/c/ce/Wands14.jpg", short: "Лидерство, воля", full: "Зрелый лидер, вдохновитель. Харизма и способность вести за собой людей.", advice: "Возьмите руководство в свои руки." },
+            // Wands (Жезлы - Огонь)
+            { id: 22, name: "Туз Жезлов", element: "fire", keywords: ["импульс", "страсть", "начало", "энергия"], image: "https://upload.wikimedia.org/wikipedia/en/1/11/Wands01.jpg", short: "Вдохновение, новая идея", full: "Искра творчества и мощный импульс энергии. Отличное время для старта новых проектов.", advice: "Действуйте смело!" },
+            { id: 23, name: "Двойка Жезлов", element: "fire", keywords: ["план", "выбор", "перспектива", "решение"], image: "https://upload.wikimedia.org/wikipedia/en/0/0f/Wands02.jpg", short: "Планирование, выбор", full: "Вы стоите на пороге и смотрите вдаль. Весь мир перед вами, но нужно составить план.", advice: "Продумайте стратегию." },
+            { id: 24, name: "Тройка Жезлов", element: "fire", keywords: ["рост", "успех", "расширение", "будущее"], image: "https://upload.wikimedia.org/wikipedia/en/f/ff/Wands03.jpg", short: "Первые успехи, расширение", full: "Ваши корабли возвращаются с золотом. Проекты начинают приносить плоды.", advice: "Смотрите шире, ищите новые горизонты." },
+            { id: 25, name: "Четверка Жезлов", element: "fire", keywords: ["праздник", "дом", "стабильность", "радость"], image: "https://upload.wikimedia.org/wikipedia/en/a/a4/Wands04.jpg", short: "Праздник, стабильность", full: "Время радости, отдыха и празднования достигнутого. Гармония в доме.", advice: "Отпразднуйте свои успехи." },
+            { id: 26, name: "Пятерка Жезлов", element: "fire", keywords: ["конфликт", "соревнование", "борьба", "вызов"], image: "https://upload.wikimedia.org/wikipedia/en/9/9d/Wands05.jpg", short: "Конкуренция, борьба", full: "Столкновение интересов, споры и соревнование. Это не война, а скорее спортивная борьба.", advice: "Докажите свое мастерство." },
+            { id: 27, name: "Шестерка Жезлов", element: "fire", keywords: ["победа", "признание", "слава", "успех"], image: "https://upload.wikimedia.org/wikipedia/en/3/3b/Wands06.jpg", short: "Победа, признание", full: "Вы — победитель на коне. Общественное признание и успех.", advice: "Примите похвалу, вы это заслужили." },
+            { id: 28, name: "Семерка Жезлов", element: "fire", keywords: ["защита", "стойкость", "вызов", "упорство"], image: "https://upload.wikimedia.org/wikipedia/en/e/e4/Wands07.jpg", short: "Защита, стойкость", full: "Вы на вершине, но многие хотят занять ваше место. Придется отстаивать свои границы.", advice: "Не сдавайте позиций." },
+            { id: 29, name: "Восьмерка Жезлов", element: "fire", keywords: ["скорость", "движение", "вести", "полет"], image: "https://upload.wikimedia.org/wikipedia/en/6/6b/Wands08.jpg", short: "Скорость, новости", full: "События развиваются стремительно. Ждите новостей или быстрой развязки ситуации.", advice: "Действуйте без промедления." },
+            { id: 30, name: "Девятка Жезлов", element: "fire", keywords: ["усталость", "защита", "опыт", "бдительность"], image: "https://upload.wikimedia.org/wikipedia/en/4/4f/Wands09.jpg", short: "Усталость, оборона", full: "Битва была долгой, вы ранены, но не сломлены. Остался последний рывок.", advice: "Будьте бдительны и не сдавайтесь." },
+            { id: 31, name: "Десятка Жезлов", element: "fire", keywords: ["тяжесть", "ответственность", "груз", "финиш"], image: "https://upload.wikimedia.org/wikipedia/en/0/0b/Wands10.jpg", short: "Бремя, ответственность", full: "Вы взвалили на себя слишком много. Тяжелая ноша мешает видеть дорогу.", advice: "Делегируйте обязанности." },
+            { id: 32, name: "Паж Жезлов", element: "fire", keywords: ["весть", "энтузиазм", "начало", "игра"], image: "https://upload.wikimedia.org/wikipedia/en/6/6a/Wands11.jpg", short: "Энтузиазм, весть", full: "Юношеский задор, любопытство и жажда приключений. Хорошие новости.", advice: "Будьте открыты новому." },
+            { id: 33, name: "Рыцарь Жезлов", element: "fire", keywords: ["действие", "страсть", "порыв", "путешествие"], image: "https://upload.wikimedia.org/wikipedia/en/1/16/Wands12.jpg", short: "Импульсивность, страсть", full: "Огонь действия. Рыцарь несется вперед, сметая преграды. Остерегайтесь поспешности.", advice: "Направьте энергию в мирное русло." },
+            { id: 34, name: "Королева Жезлов", element: "fire", keywords: ["харизма", "уверенность", "тепло", "власть"], image: "https://upload.wikimedia.org/wikipedia/en/0/0d/Wands13.jpg", short: "Харизма, уверенность", full: "Женщина-лидер, яркая, независимая и притягательная. Она знает, чего хочет.", advice: "Верьте в себя и сияйте." },
+            { id: 35, name: "Король Жезлов", element: "fire", keywords: ["лидер", "видение", "честь", "действие"], image: "https://upload.wikimedia.org/wikipedia/en/c/ce/Wands14.jpg", short: "Лидерство, воля", full: "Зрелый лидер, вдохновитель. Харизма и способность вести за собой людей.", advice: "Возьмите руководство в свои руки." },
 
-            // Cups (Кубки)
-            { id: 36, name: "Туз Кубков", image: "https://upload.wikimedia.org/wikipedia/en/3/36/Cups01.jpg", short: "Любовь, изобилие чувств", full: "Чаша переполняется эмоциями. Новая любовь, глубокая радость или духовное озарение.", advice: "Откройте свое сердце." },
-            { id: 37, name: "Двойка Кубков", image: "https://upload.wikimedia.org/wikipedia/en/f/f8/Cups02.jpg", short: "Партнерство, взаимность", full: "Идеальная пара. Гармония, взаимопонимание и сближение душ.", advice: "Ищите компромисс и единство." },
-            { id: 38, name: "Тройка Кубков", image: "https://upload.wikimedia.org/wikipedia/en/7/7a/Cups03.jpg", short: "Праздник, дружба", full: "Радость в кругу друзей. Вечеринка, свадьба или просто приятное времяпровождение.", advice: "Разделите радость с близкими." },
-            { id: 39, name: "Четверка Кубков", image: "https://upload.wikimedia.org/wikipedia/en/3/35/Cups04.jpg", short: "Скука, пресыщение", full: "Вам предлагают шансы, но вы их не замечаете из-за апатии. Эмоциональный застой.", advice: "Оглянитесь вокруг, вы упускаете возможность." },
-            { id: 40, name: "Пятерка Кубков", image: "https://upload.wikimedia.org/wikipedia/en/d/d7/Cups05.jpg", short: "Разочарование, потеря", full: "Скорбь над разлитым молоком. Вы смотрите на потери, не замечая, что осталось.", advice: "Не грустите о прошлом, цените настоящее." },
-            { id: 41, name: "Шестерка Кубков", image: "https://upload.wikimedia.org/wikipedia/en/1/17/Cups06.jpg", short: "Ностальгия, дети", full: "Воспоминания о прошлом, встреча со старым другом или детская непосредственность.", advice: "Ищите радость в простых вещах." },
-            { id: 42, name: "Семерка Кубков", image: "https://upload.wikimedia.org/wikipedia/en/a/ae/Cups07.jpg", short: "Иллюзии, мечты", full: "Много вариантов, но большинство — миражи. Трудно сделать выбор в тумане фантазий.", advice: "Спуститесь с небес на землю." },
-            { id: 43, name: "Восьмерка Кубков", image: "https://upload.wikimedia.org/wikipedia/en/6/60/Cups08.jpg", short: "Уход, поиск смысла", full: "Осознанный отказ от того, что перестало радовать. Поиск более глубокого смысла.", advice: "Идите туда, где вам будет лучше." },
-            { id: 44, name: "Девятка Кубков", image: "https://upload.wikimedia.org/wikipedia/en/2/24/Cups09.jpg", short: "Исполнение желаний", full: "Карта 'Джинна'. Удовлетворение, комфорт и эмоциональная сытость.", advice: "Наслаждайтесь моментом, ваши мечты сбываются." },
-            { id: 45, name: "Десятка Кубков", image: "https://upload.wikimedia.org/wikipedia/en/8/84/Cups10.jpg", short: "Семья, счастье", full: "Абсолютная гармония в отношениях и семье. Дом — полная чаша.", advice: "Цените своих близких." },
-            { id: 46, name: "Паж Кубков", image: "https://upload.wikimedia.org/wikipedia/en/a/a6/Cups11.jpg", short: "Весть о чувствах", full: "Нежное послание, приглашение или романтический жест. Творческий импульс.", advice: "Доверьтесь интуиции." },
-            { id: 47, name: "Рыцарь Кубков", image: "https://upload.wikimedia.org/wikipedia/en/f/fa/Cups12.jpg", short: "Романтика, предложение", full: "Принц на белом коне. Мечтатель, несущий любовь и красоту.", advice: "Следуйте за своим сердцем." },
-            { id: 48, name: "Королева Кубков", image: "https://upload.wikimedia.org/wikipedia/en/9/9d/Cups13.jpg", short: "Эмпатия, забота", full: "Глубоко чувствующая женщина. Она понимает без слов и исцеляет душу.", advice: "Проявите сострадание." },
-            { id: 49, name: "Король Кубков", image: "https://upload.wikimedia.org/wikipedia/en/0/04/Cups14.jpg", short: "Эмоциональный контроль", full: "Мудрый советник, владеющий своими эмоциями. Дипломатия и такт.", advice: "Сохраняйте спокойствие." },
+            // Cups (Кубки - Вода)
+            { id: 36, name: "Туз Кубков", element: "water", keywords: ["любовь", "эмоции", "начало", "дар"], image: "https://upload.wikimedia.org/wikipedia/en/3/36/Cups01.jpg", short: "Любовь, изобилие чувств", full: "Чаша переполняется эмоциями. Новая любовь, глубокая радость или духовное озарение.", advice: "Откройте свое сердце." },
+            { id: 37, name: "Двойка Кубков", element: "water", keywords: ["союз", "партнерство", "любовь", "связь"], image: "https://upload.wikimedia.org/wikipedia/en/f/f8/Cups02.jpg", short: "Партнерство, взаимность", full: "Идеальная пара. Гармония, взаимопонимание и сближение душ.", advice: "Ищите компромисс и единство." },
+            { id: 38, name: "Тройка Кубков", element: "water", keywords: ["праздник", "дружба", "радость", "сообщество"], image: "https://upload.wikimedia.org/wikipedia/en/7/7a/Cups03.jpg", short: "Праздник, дружба", full: "Радость в кругу друзей. Вечеринка, свадьба или просто приятное времяпровождение.", advice: "Разделите радость с близкими." },
+            { id: 39, name: "Четверка Кубков", element: "water", keywords: ["апатия", "скука", "застой", "отказ"], image: "https://upload.wikimedia.org/wikipedia/en/3/35/Cups04.jpg", short: "Скука, пресыщение", full: "Вам предлагают шансы, но вы их не замечаете из-за апатии. Эмоциональный застой.", advice: "Оглянитесь вокруг, вы упускаете возможность." },
+            { id: 40, name: "Пятерка Кубков", element: "water", keywords: ["потеря", "печаль", "сожаление", "слезы"], image: "https://upload.wikimedia.org/wikipedia/en/d/d7/Cups05.jpg", short: "Разочарование, потеря", full: "Скорбь над разлитым молоком. Вы смотрите на потери, не замечая, что осталось.", advice: "Не грустите о прошлом, цените настоящее." },
+            { id: 41, name: "Шестерка Кубков", element: "water", keywords: ["прошлое", "ностальгия", "детство", "невинность"], image: "https://upload.wikimedia.org/wikipedia/en/1/17/Cups06.jpg", short: "Ностальгия, дети", full: "Воспоминания о прошлом, встреча со старым другом или детская непосредственность.", advice: "Ищите радость в простых вещах." },
+            { id: 42, name: "Семерка Кубков", element: "water", keywords: ["иллюзия", "выбор", "мечты", "путаница"], image: "https://upload.wikimedia.org/wikipedia/en/a/ae/Cups07.jpg", short: "Иллюзии, мечты", full: "Много вариантов, но большинство — миражи. Трудно сделать выбор в тумане фантазий.", advice: "Спуститесь с небес на землю." },
+            { id: 43, name: "Восьмерка Кубков", element: "water", keywords: ["уход", "поиск", "отказ", "путь"], image: "https://upload.wikimedia.org/wikipedia/en/6/60/Cups08.jpg", short: "Уход, поиск смысла", full: "Осознанный отказ от того, что перестало радовать. Поиск более глубокого смысла.", advice: "Идите туда, где вам будет лучше." },
+            { id: 44, name: "Девятка Кубков", element: "water", keywords: ["желание", "удовольствие", "счастье", "комфорт"], image: "https://upload.wikimedia.org/wikipedia/en/2/24/Cups09.jpg", short: "Исполнение желаний", full: "Карта 'Джинна'. Удовлетворение, комфорт и эмоциональная сытость.", advice: "Наслаждайтесь моментом, ваши мечты сбываются." },
+            { id: 45, name: "Десятка Кубков", element: "water", keywords: ["семья", "гармония", "любовь", "дом"], image: "https://upload.wikimedia.org/wikipedia/en/8/84/Cups10.jpg", short: "Семья, счастье", full: "Абсолютная гармония в отношениях и семье. Дом — полная чаша.", advice: "Цените своих близких." },
+            { id: 46, name: "Паж Кубков", element: "water", keywords: ["весть", "чувства", "начало", "интуиция"], image: "https://upload.wikimedia.org/wikipedia/en/a/a6/Cups11.jpg", short: "Весть о чувства", full: "Нежное послание, приглашение или романтический жест. Творческий импульс.", advice: "Доверьтесь интуиции." },
+            { id: 47, name: "Рыцарь Кубков", element: "water", keywords: ["романтика", "предложение", "идеал", "поэт"], image: "https://upload.wikimedia.org/wikipedia/en/f/fa/Cups12.jpg", short: "Романтика, предложение", full: "Принц на белом коне. Мечтатель, несущий любовь и красоту.", advice: "Следуйте за своим сердцем." },
+            { id: 48, name: "Королева Кубков", element: "water", keywords: ["сострадание", "забота", "интуиция", "мать"], image: "https://upload.wikimedia.org/wikipedia/en/9/9d/Cups13.jpg", short: "Эмпатия, забота", full: "Глубоко чувствующая женщина. Она понимает без слов и исцеляет душу.", advice: "Проявите сострадание." },
+            { id: 49, name: "Король Кубков", element: "water", keywords: ["баланс", "мудрость", "дипломатия", "спокойствие"], image: "https://upload.wikimedia.org/wikipedia/en/0/04/Cups14.jpg", short: "Эмоциональный контроль", full: "Мудрый советник, владеющий своими эмоциями. Дипломатия и такт.", advice: "Сохраняйте спокойствие." },
 
-            // Swords (Мечи)
-            { id: 50, name: "Туз Мечей", image: "https://upload.wikimedia.org/wikipedia/en/1/1a/Swords01.jpg", short: "Ясность, прорыв", full: "Триумф разума. Озарение, которое рассекает гордиев узел проблем.", advice: "Режьте правду-матку." },
-            { id: 51, name: "Двойка Мечей", image: "https://upload.wikimedia.org/wikipedia/en/9/9e/Swords02.jpg", short: "Тупик, закрытость", full: "Нежелание видеть правду. Выбор откладывается, сердце закрыто щитом.", advice: "Снимите повязку с глаз." },
-            { id: 52, name: "Тройка Мечей", image: "https://upload.wikimedia.org/wikipedia/en/0/02/Swords03.jpg", short: "Разбитое сердце", full: "Боль, расставание, печаль. Дождь должен пройти, чтобы выглянуло солнце.", advice: "Проживите эту боль и отпустите." },
-            { id: 53, name: "Четверка Мечей", image: "https://upload.wikimedia.org/wikipedia/en/b/bf/Swords04.jpg", short: "Отдых, покой", full: "Пауза в битве. Необходимо восстановление сил и временное уединение.", advice: "Возьмите тайм-аут." },
-            { id: 54, name: "Пятерка Мечей", image: "https://upload.wikimedia.org/wikipedia/en/2/23/Swords05.jpg", short: "Пиррова победа", full: "Победа любой ценой, которая не приносит радости. Конфликт, где проигрывают все.", advice: "Подумайте, стоит ли игра свеч." },
-            { id: 55, name: "Шестерка Мечей", image: "https://upload.wikimedia.org/wikipedia/en/2/29/Swords06.jpg", short: "Переход, путешествие", full: "Уход от проблем к тихому берегу. Поездка или ментальное восстановление.", advice: "Двигайтесь к спокойствию." },
-            { id: 56, name: "Семерка Мечей", image: "https://upload.wikimedia.org/wikipedia/en/3/34/Swords07.jpg", short: "Хитрость, обман", full: "Попытка уйти от ответственности или действовать исподтишка. Дипломатия или воровство?", advice: "Ищите нестандартные пути, но будьте осторожны." },
-            { id: 57, name: "Восьмерка Мечей", image: "https://upload.wikimedia.org/wikipedia/en/a/a7/Swords08.jpg", short: "Ограничения, плен", full: "Вы чувствуете себя в ловушке, но путы иллюзорны. Барьеры только в вашей голове.", advice: "Освободитесь от страхов." },
-            { id: 58, name: "Девятка Мечей", image: "https://upload.wikimedia.org/wikipedia/en/2/2f/Swords09.jpg", short: "Кошмар, тревога", full: "Бессонные ночи. Страхи и чувство вины мучают вас. Но утро вечера мудренее.", advice: "Не накручивайте себя." },
-            { id: 59, name: "Десятка Мечей", image: "https://upload.wikimedia.org/wikipedia/en/d/d4/Swords10.jpg", short: "Финал, дно", full: "Хуже уже не будет. Это конец черной полосы. Дальше только вверх.", advice: "Вставайте, все закончилось." },
-            { id: 60, name: "Паж Мечей", image: "https://upload.wikimedia.org/wikipedia/en/4/4c/Swords11.jpg", short: "Слежка, новости", full: "Острый ум, любопытство, но и сплетни. Будьте начеку.", advice: "Анализируйте информацию." },
-            { id: 61, name: "Рыцарь Мечей", image: "https://upload.wikimedia.org/wikipedia/en/b/b0/Swords12.jpg", short: "Агрессия, натиск", full: "Стремительное действие, критика, война идей. Холодный интеллект без эмоций.", advice: "Не рубите с плеча." },
-            { id: 62, name: "Королева Мечей", image: "https://upload.wikimedia.org/wikipedia/en/d/d4/Swords13.jpg", short: "Независимость, ум", full: "Женщина с острым умом и языком. Она видит правду насквозь и не терпит лжи.", advice: "Думайте головой, а не сердцем." },
-            { id: 63, name: "Король Мечей", image: "https://upload.wikimedia.org/wikipedia/en/3/33/Swords14.jpg", short: "Логика, власть", full: "Авторитет, закон, аналитика. Решения принимаются исключительно на фактах.", advice: "Будьте беспристрастны." },
+            // Swords (Мечи - Воздух)
+            { id: 50, name: "Туз Мечей", element: "air", keywords: ["ясность", "правда", "ум", "прорыв"], image: "https://upload.wikimedia.org/wikipedia/en/1/1a/Swords01.jpg", short: "Ясность, прорыв", full: "Триумф разума. Озарение, которое рассекает гордиев узел проблем.", advice: "Режьте правду-матку." },
+            { id: 51, name: "Двойка Мечей", element: "air", keywords: ["выбор", "тупик", "баланс", "слепота"], image: "https://upload.wikimedia.org/wikipedia/en/9/9e/Swords02.jpg", short: "Тупик, закрытость", full: "Нежелание видеть правду. Выбор откладывается, сердце закрыто щитом.", advice: "Снимите повязку с глаз." },
+            { id: 52, name: "Тройка Мечей", element: "air", keywords: ["боль", "разлука", "сердце", "печаль"], image: "https://upload.wikimedia.org/wikipedia/en/0/02/Swords03.jpg", short: "Разбитое сердце", full: "Боль, расставание, печаль. Дождь должен пройти, чтобы выглянуло солнце.", advice: "Проживите эту боль и отпустите." },
+            { id: 53, name: "Четверка Мечей", element: "air", keywords: ["покой", "пауза", "сон", "восстановление"], image: "https://upload.wikimedia.org/wikipedia/en/b/bf/Swords04.jpg", short: "Отдых, покой", full: "Пауза в битве. Необходимо восстановление сил и временное уединение.", advice: "Возьмите тайм-аут." },
+            { id: 54, name: "Пятерка Мечей", element: "air", keywords: ["победа", "конфликт", "поражение", "эго"], image: "https://upload.wikimedia.org/wikipedia/en/2/23/Swords05.jpg", short: "Пиррова победа", full: "Победа любой ценой, которая не приносит радости. Конфликт, где проигрывают все.", advice: "Подумайте, стоит ли игра свеч." },
+            { id: 55, name: "Шестерка Мечей", element: "air", keywords: ["переход", "путь", "изменение", "помощь"], image: "https://upload.wikimedia.org/wikipedia/en/2/29/Swords06.jpg", short: "Переход, путешествие", full: "Уход от проблем к тихому берегу. Поездка или ментальное восстановление.", advice: "Двигайтесь к спокойствию." },
+            { id: 56, name: "Семерка Мечей", element: "air", keywords: ["хитрость", "обман", "стратегия", "уловка"], image: "https://upload.wikimedia.org/wikipedia/en/3/34/Swords07.jpg", short: "Хитрость, обман", full: "Попытка уйти от ответственности или действовать исподтишка. Дипломатия или воровство?", advice: "Ищите нестандартные пути, но будьте осторожны." },
+            { id: 57, name: "Восьмерка Мечей", element: "air", keywords: ["плен", "страх", "барьер", "мысли"], image: "https://upload.wikimedia.org/wikipedia/en/a/a7/Swords08.jpg", short: "Ограничения, плен", full: "Вы чувствуете себя в ловушке, но путы иллюзорны. Барьеры только в вашей голове.", advice: "Освободитесь от страхов." },
+            { id: 58, name: "Девятка Мечей", element: "air", keywords: ["страх", "кошмар", "тревога", "вина"], image: "https://upload.wikimedia.org/wikipedia/en/2/2f/Swords09.jpg", short: "Кошмар, тревога", full: "Бессонные ночи. Страхи и чувство вины мучают вас. Но утро вечера мудренее.", advice: "Не накручивайте себя." },
+            { id: 59, name: "Десятка Мечей", element: "air", keywords: ["конец", "боль", "дно", "рассвет"], image: "https://upload.wikimedia.org/wikipedia/en/d/d4/Swords10.jpg", short: "Финал, дно", full: "Хуже уже не будет. Это конец черной полосы. Дальше только вверх.", advice: "Вставайте, все закончилось." },
+            { id: 60, name: "Паж Мечей", element: "air", keywords: ["ум", "шпион", "весть", "любопытство"], image: "https://upload.wikimedia.org/wikipedia/en/4/4c/Swords11.jpg", short: "Слежка, новости", full: "Острый ум, любопытство, но и сплетни. Будьте начеку.", advice: "Анализируйте информацию." },
+            { id: 61, name: "Рыцарь Мечей", element: "air", keywords: ["скорость", "агрессия", "логика", "натиск"], image: "https://upload.wikimedia.org/wikipedia/en/b/b0/Swords12.jpg", short: "Агрессия, натиск", full: "Стремительное действие, критика, война идей. Холодный интеллект без эмоций.", advice: "Не рубите с плеча." },
+            { id: 62, name: "Королева Мечей", element: "air", keywords: ["правда", "опыт", "холод", "ясность"], image: "https://upload.wikimedia.org/wikipedia/en/d/d4/Swords13.jpg", short: "Независимость, ум", full: "Женщина с острым умом и языком. Она видит правду насквозь и не терпит лжи.", advice: "Думайте головой, а не сердцем." },
+            { id: 63, name: "Король Мечей", element: "air", keywords: ["власть", "закон", "логика", "судья"], image: "https://upload.wikimedia.org/wikipedia/en/3/33/Swords14.jpg", short: "Логика, власть", full: "Авторитет, закон, аналитика. Решения принимаются исключительно на фактах.", advice: "Будьте беспристрастны." },
 
-            // Pentacles (Пентакли)
-            { id: 64, name: "Туз Пентаклей", image: "https://upload.wikimedia.org/wikipedia/en/f/fd/Pents01.jpg", short: "Шанс, дар, деньги", full: "Материальный успех. Дар небес, выигрыш или отличная возможность заработать.", advice: "Ловите удачу за хвост." },
-            { id: 65, name: "Двойка Пентаклей", image: "https://upload.wikimedia.org/wikipedia/en/9/9f/Pents02.jpg", short: "Гибкость, игра", full: "Жонглирование обязанностями или финансами. Нужно уметь адаптироваться к переменам.", advice: "Будьте гибче." },
-            { id: 66, name: "Тройка Пентаклей", image: "https://upload.wikimedia.org/wikipedia/en/4/42/Pents03.jpg", short: "Мастерство, работа", full: "Командная работа, профессионализм. Строительство чего-то прочного.", advice: "Сотрудничайте с другими." },
-            { id: 67, name: "Четверка Пентаклей", image: "https://upload.wikimedia.org/wikipedia/en/6/64/Pents04.jpg", short: "Жадность, стабильность", full: "Желание удержать свое, страх потери. Стабильность, переходящая в застой.", advice: "Не будьте скрягой." },
-            { id: 68, name: "Пятерка Пентаклей", image: "https://upload.wikimedia.org/wikipedia/en/6/67/Pents05.jpg", short: "Нужда, кризис", full: "Финансовые потери или чувство покинутости. Трудные времена, но помощь рядом.", advice: "Не бойтесь просить о помощи." },
-            { id: 69, name: "Шестерка Пентаклей", image: "https://upload.wikimedia.org/wikipedia/en/a/a6/Pents06.jpg", short: "Щедрость, помощь", full: "Баланс 'брать-давать'. Благотворительность, получение гранта или возвращение долга.", advice: "Будьте щедры, и вам воздастся." },
-            { id: 70, name: "Семерка Пентаклей", image: "https://upload.wikimedia.org/wikipedia/en/6/6a/Pents07.jpg", short: "Ожидание урожая", full: "Вы хорошо потрудились, теперь нужно ждать результатов. Терпение — ключ к успеху.", advice: "Не торопите события." },
-            { id: 71, name: "Восьмерка Пентаклей", image: "https://upload.wikimedia.org/wikipedia/en/4/49/Pents08.jpg", short: "Труд, навыки", full: "Усердная работа над деталями. Освоение мастерства и рутинный труд.", advice: "Совершенствуйте свои навыки." },
-            { id: 72, name: "Девятка Пентаклей", image: "https://upload.wikimedia.org/wikipedia/en/f/f0/Pents09.jpg", short: "Достаток, комфорт", full: "Финансовая независимость и роскошь ради себя. Наслаждение плодами труда.", advice: "Побалуйте себя." },
-            { id: 73, name: "Десятка Пентаклей", image: "https://upload.wikimedia.org/wikipedia/en/4/42/Pents10.jpg", short: "Богатство, наследие", full: "Семейный капитал, прочность традиций и финансовое благополучие поколений.", advice: "Думайте о будущем семьи." },
-            { id: 74, name: "Паж Пентаклей", image: "https://upload.wikimedia.org/wikipedia/en/e/ec/Pents11.jpg", short: "Ученик, шанс", full: "Студент, готовый учиться практическому делу. Новое начинание в бизнесе.", advice: "Учитесь новому." },
-            { id: 75, name: "Рыцарь Пентаклей", image: "https://upload.wikimedia.org/wikipedia/en/8/8d/Pents12.jpg", short: "Надежность, упорство", full: "Медленное, но верное движение к цели. Трудоголик, на которого можно положиться.", advice: "Тише едешь — дальше будешь." },
-            { id: 76, name: "Королева Пентаклей", image: "https://upload.wikimedia.org/wikipedia/en/d/d5/Pents13.jpg", short: "Хозяйка, изобилие", full: "Заботливая женщина, умеющая вести быт и бизнес. Плодородие и ресурсность.", advice: "Заботьтесь о своем комфорте." },
-            { id: 77, name: "Король Пентаклей", image: "https://upload.wikimedia.org/wikipedia/en/1/1c/Pents14.jpg", short: "Бизнесмен, успех", full: "Вершина материального успеха. Владелец бизнеса, меценат, гарант стабильности.", advice: "Управляйте ресурсами мудро." }
+            // Pentacles (Пентакли - Земля)
+            { id: 64, name: "Туз Пентаклей", element: "earth", keywords: ["деньги", "ресурс", "шанс", "дар"], image: "https://upload.wikimedia.org/wikipedia/en/f/fd/Pents01.jpg", short: "Шанс, дар, деньги", full: "Материальный успех. Дар небес, выигрыш или отличная возможность заработать.", advice: "Ловите удачу за хвост." },
+            { id: 65, name: "Двойка Пентаклей", element: "earth", keywords: ["баланс", "игра", "гибкость", "перемены"], image: "https://upload.wikimedia.org/wikipedia/en/9/9f/Pents02.jpg", short: "Гибкость, игра", full: "Жонглирование обязанностями или финансами. Нужно уметь адаптироваться к переменам.", advice: "Будьте гибче." },
+            { id: 66, name: "Тройка Пентаклей", element: "earth", keywords: ["команда", "мастерство", "план", "рост"], image: "https://upload.wikimedia.org/wikipedia/en/4/42/Pents03.jpg", short: "Мастерство, работа", full: "Командная работа, профессионализм. Строительство чего-то прочного.", advice: "Сотрудничайте с другими." },
+            { id: 67, name: "Четверка Пентаклей", element: "earth", keywords: ["жадность", "контроль", "копилка", "страх"], image: "https://upload.wikimedia.org/wikipedia/en/6/64/Pents04.jpg", short: "Жадность, стабильность", full: "Желание удержать свое, страх потери. Стабильность, переходящая в застой.", advice: "Не будьте скрягой." },
+            { id: 68, name: "Пятерка Пентаклей", element: "earth", keywords: ["нужда", "потеря", "холод", "кризис"], image: "https://upload.wikimedia.org/wikipedia/en/6/67/Pents05.jpg", short: "Нужда, кризис", full: "Финансовые потери или чувство покинутости. Трудные времена, но помощь рядом.", advice: "Не бойтесь просить о помощи." },
+            { id: 69, name: "Шестерка Пентаклей", element: "earth", keywords: ["помощь", "щедрость", "баланс", "дар"], image: "https://upload.wikimedia.org/wikipedia/en/a/a6/Pents06.jpg", short: "Щедрость, помощь", full: "Баланс 'брать-давать'. Благотворительность, получение гранта или возвращение долга.", advice: "Будьте щедры, и вам воздастся." },
+            { id: 70, name: "Семерка Пентаклей", element: "earth", keywords: ["терпение", "урожай", "оценка", "рост"], image: "https://upload.wikimedia.org/wikipedia/en/6/6a/Pents07.jpg", short: "Ожидание урожая", full: "Вы хорошо потрудились, теперь нужно ждать результатов. Терпение — ключ к успеху.", advice: "Не торопите события." },
+            { id: 71, name: "Восьмерка Пентаклей", element: "earth", keywords: ["труд", "деталь", "навык", "учеба"], image: "https://upload.wikimedia.org/wikipedia/en/4/49/Pents08.jpg", short: "Труд, навыки", full: "Усердная работа над деталями. Освоение мастерства и рутинный труд.", advice: "Совершенствуйте свои навыки." },
+            { id: 72, name: "Девятка Пентаклей", element: "earth", keywords: ["роскошь", "успех", "сад", "комфорт"], image: "https://upload.wikimedia.org/wikipedia/en/f/f0/Pents09.jpg", short: "Достаток, комфорт", full: "Финансовая независимость и роскошь ради себя. Наслаждение плодами труда.", advice: "Побалуйте себя." },
+            { id: 73, name: "Десятка Пентаклей", element: "earth", keywords: ["семья", "наследие", "богатство", "дом"], image: "https://upload.wikimedia.org/wikipedia/en/4/42/Pents10.jpg", short: "Богатство, наследие", full: "Семейный капитал, прочность традиций и финансовое благополучие поколений.", advice: "Думайте о будущем семьи." },
+            { id: 74, name: "Паж Пентаклей", element: "earth", keywords: ["шанс", "ученик", "монета", "начало"], image: "https://upload.wikimedia.org/wikipedia/en/e/ec/Pents11.jpg", short: "Ученик, шанс", full: "Студент, готовый учиться практическому делу. Новое начинание в бизнесе.", advice: "Учитесь новому." },
+            { id: 75, name: "Рыцарь Пентаклей", element: "earth", keywords: ["труд", "надежность", "упорство", "путь"], image: "https://upload.wikimedia.org/wikipedia/en/8/8d/Pents12.jpg", short: "Надежность, упорство", full: "Медленное, но верное движение к цели. Трудоголик, на которого можно положиться.", advice: "Тише едешь — дальше будешь." },
+            { id: 76, name: "Королева Пентаклей", element: "earth", keywords: ["хозяйка", "забота", "ресурс", "тепло"], image: "https://upload.wikimedia.org/wikipedia/en/d/d5/Pents13.jpg", short: "Хозяйка, изобилие", full: "Заботливая женщина, умеющая вести быт и бизнес. Плодородие и ресурсность.", advice: "Заботьтесь о своем комфорте." },
+            { id: 77, name: "Король Пентаклей", element: "earth", keywords: ["босс", "бизнес", "власть", "деньги"], image: "https://upload.wikimedia.org/wikipedia/en/1/1c/Pents14.jpg", short: "Бизнесмен, успех", full: "Вершина материального успеха. Владелец бизнеса, меценат, гарант стабильности.", advice: "Управляйте ресурсами мудро." }
         ];
 
         const FULL_DECK = [...MAJOR_ARCANA, ...MINOR_ARCANA];
@@ -656,9 +738,36 @@
         };
 
         const SPREAD_INFO = {
-            'one': { name: 'Карта Дня', count: 1, labels: ['Карта Дня'] },
-            'three': { name: 'Три Карты', count: 3, labels: ['Причина', 'Ситуация', 'Исход'] },
-            'cross': { name: 'Кельтский Крест', count: 10, labels: ['1. Ситуация', '2. Влияние', '3. Сознание', '4. Подсознание', '5. Прошлое', '6. Будущее', '7. Вы', '8. Окружение', '9. Надежды', '10. Итог'] }
+            'one': { name: 'Карта Дня', count: 1, labels: ['Карта Дня'], descriptions: ['Главное послание дня'] },
+            'three': { name: 'Три Карты', count: 3, labels: ['Причина', 'Ситуация', 'Исход'], descriptions: ['Корень вопроса', 'Текущее положение', 'Куда всё движется'] },
+            'cross': {
+                name: 'Кельтский Крест',
+                count: 10,
+                labels: [
+                    '🎯 Сердце вопроса',
+                    '⚔️ Препятствие',
+                    '👑 Идеал',
+                    '🌙 Корни',
+                    '⏪ Прошлое',
+                    '⏩ Ближайшее будущее',
+                    '🧘 Ты сейчас',
+                    '👥 Окружение',
+                    '💭 Надежды и страхи',
+                    '✨ Итог'
+                ],
+                descriptions: [
+                    'Суть твоей ситуации прямо сейчас',
+                    'Что стоит на пути или помогает',
+                    'Лучший возможный исход',
+                    'Глубинные причины ситуации',
+                    'Что привело тебя сюда',
+                    'Что произойдёт в ближайшие дни',
+                    'Как ты относишься к ситуации',
+                    'Как на тебя влияют другие люди',
+                    'Твои скрытые желания и опасения',
+                    'Финальный результат, если всё оставить как есть'
+                ]
+            }
         };
 
         // --- Init ---
@@ -746,8 +855,13 @@
             deck.classList.add('processing');
 
             const cardBack = deck.querySelector('.card-back');
-            cardBack.classList.add('card-shaking');
 
+            // Delay before flip starts
+            setTimeout(() => {
+                cardBack.classList.add('card-shaking');
+            }, 300);
+
+            // Wait for flip to complete, then show result with fade
             setTimeout(() => {
                 cardBack.classList.remove('card-shaking');
                 deck.classList.remove('processing');
@@ -770,7 +884,212 @@
                 localStorage.setItem(KEYS.AD_WATCHED, 'false');
 
                 showResult(resultCards, state.selectedSpread, true);
-            }, 800);
+            }, 1800); // 300ms delay + 1000ms flip + 500ms pause
+        }
+
+        // --- Narrative Engine v2.0 ---
+        // Rich template system for unique narratives
+
+        const INTRO_TEMPLATES = [
+            "Твоя история начинается с энергии <em>{keyword}</em>. Это не случайность — Вселенная указывает на корень всего происходящего.",
+            "Первая карта шепчет о <em>{keyword}</em>. Это фундамент, на котором строится весь расклад.",
+            "В основе твоей ситуации лежит понятие <em>{keyword}</em>. Именно отсюда берут начало все нити судьбы."
+        ];
+
+        const DYNAMICS_TEMPLATES = {
+            // Fire combinations
+            "fire_fire": [
+                "Два огня встретились — и мир вокруг тебя начинает плавиться. Энергия зашкаливает, но важно не сгореть самому.",
+                "Пламя питает пламя. Ты сейчас на пике активности, но помни: даже солнце садится, чтобы взойти снова.",
+                "Страсть умножается на страсть. Это время великих свершений, если ты сумеешь направить этот жар в нужное русло."
+            ],
+            "fire_water": [
+                "Огонь и вода — вечный танец противоположностей внутри тебя. Желание действовать натыкается на эмоциональные барьеры.",
+                "Пар поднимается там, где встречаются твои амбиции и чувства. Это напряжение — источник трансформации.",
+                "Ты разрываешься между порывом и осторожностью. Найди точку, где страсть и интуиция работают вместе."
+            ],
+            "fire_air": [
+                "Идеи становятся топливом для действия. Твой разум подбрасывает дрова в костер перемен.",
+                "Ветер раздувает пламя — мысли превращаются в планы, планы — в реальность. Время не ждет.",
+                "Воздух и огонь создают вихрь возможностей. Ты думаешь и действуешь одновременно."
+            ],
+            "fire_earth": [
+                "Твой энтузиазм встречает стену реальности. Но это не преграда — это фундамент для чего-то прочного.",
+                "Огонь хочет взлететь, земля держит корни. Найди баланс между мечтой и практикой.",
+                "Страсть ищет форму. Твоя задача — превратить энергию в конкретный результат."
+            ],
+            "water_water": [
+                "Глубина зовет глубину. Ты погружаешься в океан эмоций, где интуиция — единственный компас.",
+                "Две волны сливаются в одну. Чувства усиливаются, границы размываются. Доверься потоку.",
+                "Это время глубокого эмоционального погружения. Не бойся темных вод — там скрыты жемчужины."
+            ],
+            "water_fire": [
+                "Эмоции вскипают, толкая к действию. Но куда — вперед или назад? Сердце знает ответ.",
+                "Вода не тушит этот огонь — она превращается в пар перемен. Используй эту энергию.",
+                "Чувства и желания борются за руль. Позволь им договориться, не подавляя ни одного."
+            ],
+            "water_air": [
+                "Сердце и разум ведут вечный диалог. Не выбирай между ними — слушай обоих.",
+                "Туман над океаном — так выглядит твоя ситуация. Логика пытается понять то, что чувствуется, но не объясняется.",
+                "Мысли плавают в чувствах, чувства думают. Это время для интеграции, а не выбора."
+            ],
+            "water_earth": [
+                "Мечты находят почву. Твои эмоции наконец-то могут вырасти во что-то реальное.",
+                "Река достигает плодородной равнины. Время сажать семена того, что чувствуешь.",
+                "Вода и земля — союз, рождающий жизнь. Твоя интуиция получает материальное воплощение."
+            ],
+            "air_air": [
+                "Мысли множатся, идеи роятся. Твой разум — ураган возможностей. Но выбери одну и следуй.",
+                "Два ветра могут создать штиль или шторм. Направь свой интеллект в одну точку.",
+                "Это время для ментальной ясности. Все ответы уже в твоей голове — нужно только их увидеть."
+            ],
+            "air_fire": [
+                "Мысль становится искрой, искра — пламенем. От идеи до действия — один вдох.",
+                "Разум командует, воля исполняет. Ты в режиме быстрых решений и мгновенных действий.",
+                "Ветер перемен несет огонь обновления. Думай быстро, действуй решительно."
+            ],
+            "air_water": [
+                "Логика пытается измерить океан чувств. Не всё можно понять — но можно принять.",
+                "Разум и сердце ищут общий язык. Это время для мудрости, которая объединяет оба.",
+                "Ты анализируешь свои эмоции. Полезно, но не забывай иногда просто чувствовать."
+            ],
+            "air_earth": [
+                "Идеи проходят проверку реальностью. Что останется — то и ценно.",
+                "Теории встречают практику. Время доказать, что твои мысли чего-то стоят.",
+                "Ветер обтачивает камень. Твои идеи обретают твердую форму."
+            ],
+            "earth_earth": [
+                "Фундамент на фундаменте. Ты строишь что-то настолько прочное, что переживет поколения.",
+                "Двойное заземление — ты крепко стоишь на ногах. Время для практических решений.",
+                "Стабильность усиливается. Это период накопления ресурсов и укрепления позиций."
+            ],
+            "earth_fire": [
+                "Из земли пробивается огонь. Под спокойной поверхностью зреет вулкан перемен.",
+                "Ты строишь, но внутри горит желание большего. Не игнорируй этот зов.",
+                "Практичность и страсть ищут компромисс. Можно быть и надежным, и смелым."
+            ],
+            "earth_water": [
+                "Берег и море — вечный диалог материи и души. Ты находишь гармонию между ними.",
+                "Чувства обретают форму. Твои эмоции становятся чем-то осязаемым.",
+                "Земля впитывает воду — ты интегрируешь интуицию в повседневную жизнь."
+            ],
+            "earth_air": [
+                "Идеи ищут применение. Пора превратить теорию в практику.",
+                "Ты заземляешь свои мысли. Каждая идея получает план реализации.",
+                "Камень слушает ветер. Твоя практичность открыта новым концепциям."
+            ]
+        };
+
+        const OUTCOME_TEMPLATES = [
+            "Путь ведет к <em>{keyword}</em>. Это не конец — это новая глава, которую ты сам напишешь.",
+            "На горизонте маячит <em>{keyword}</em>. Вселенная готовит тебе именно то, что нужно для роста.",
+            "Развязка связана с понятием <em>{keyword}</em>. Прими это как дар, даже если он завернут в странную обертку."
+        ];
+
+        const DOMINANT_ELEMENT_NOTES = {
+            fire: [
+                "Огонь преобладает в раскладе — это время действия, а не размышлений.",
+                "Три карты пропитаны огнем. Вселенная говорит: хватит планировать, пора гореть.",
+                "Стихия огня доминирует. Энергия, страсть и воля — твои главные инструменты сейчас."
+            ],
+            water: [
+                "Вода заполняет расклад — прислушайся к чувствам, они не врут.",
+                "Интуиция сейчас — твой лучший советник. Доверяй внутреннему голосу.",
+                "Эмоциональная мудрость преобладает. Не борись с потоком — плыви."
+            ],
+            air: [
+                "Воздух пронизывает расклад — разум должен быть ясным как небо.",
+                "Мысли и слова имеют особую силу сейчас. Выбирай их осознанно.",
+                "Интеллект и коммуникация — ключи к разрешению ситуации."
+            ],
+            earth: [
+                "Земля укрепляет расклад — время для практических решений.",
+                "Стабильность и ресурсы в фокусе. Строй на прочном фундаменте.",
+                "Материальный мир требует внимания. Будь практичен и последователен."
+            ]
+        };
+
+        // Transition phrases between dynamics and outcome
+        const TRANSITION_TO_OUTCOME = [
+            "Но куда всё это ведет?",
+            "И что же ждет тебя впереди?",
+            "Это движение имеет направление.",
+            "Посмотрим, к чему приведет этот путь.",
+            "А теперь — о том, что тебе готовит судьба."
+        ];
+
+        // Card name context phrases
+        const CARD_CONTEXT_PHRASES = [
+            "Карта <strong>{name}</strong> напоминает:",
+            "<strong>{name}</strong> шепчет тебе:",
+            "Устами <strong>{name}</strong> говорит Вселенная:",
+            "В энергии <strong>{name}</strong> скрыт ключ:"
+        ];
+
+        // Final wisdom phrases
+        const FINAL_WISDOM = [
+            "Помни: карты не предсказывают — они подсказывают.",
+            "Это не приговор, а компас. Ты всегда свободен выбирать.",
+            "Вселенная показала карты. Ход за тобой.",
+            "Расклад завершен, но история только начинается.",
+            "Доверься процессу. Всё происходит вовремя."
+        ];
+
+        function randomPick(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+
+        // --- Card-Centric Narrative Engine (v5) ---
+
+        function generateSynthesis(cards) {
+            // Helper to get narrative phrase or fallback
+            // Example fallback: "пережить (короткое описание)"
+            const getNarrative = (c) => {
+                if (c.narrative) return c.narrative;
+                // Fallback for Minor Arcana or missing data
+                return `прожить энергию "${c.short.toLowerCase()}"`;
+            };
+
+            const n0 = getNarrative(cards[0]);
+            const n1 = getNarrative(cards[1]);
+            const n2 = getNarrative(cards[2]);
+
+            // Templates for natural flow (designed for Infinitive verb phrases)
+            const templates = [
+                `Всё начинается с того, что вы готовы <strong>${n0}</strong>. Сейчас ситуация требует от вас <strong>${n1}</strong>. В конечном итоге это приведет к возможности <strong>${n2}</strong>.`,
+
+                `Суть происходящего — это необходимость <strong>${n0}</strong>. Ваша следующая задача — <strong>${n1}</strong>, и финалом этого этапа станет шанс <strong>${n2}</strong>.`,
+
+                `Ключ к ситуации — ваша готовность <strong>${n0}</strong>. Не бойтесь <strong>${n1}</strong> — именно этот шаг позволит вам <strong>${n2}</strong>.`,
+
+                `В основе ситуации — внутреннее стремление <strong>${n0}</strong>. Это приводит к необходимости <strong>${n1}</strong>. Если вы справитесь, то сможете <strong>${n2}</strong>.`
+            ];
+
+            const text = templates[Math.floor(Math.random() * templates.length)];
+
+            // Generated Advice logic (Nominative case safe)
+            const k0 = cards[0].keywords[Math.floor(Math.random() * cards[0].keywords.length)];
+            const k1 = cards[1].keywords[Math.floor(Math.random() * cards[1].keywords.length)];
+            const k2 = cards[2].keywords[Math.floor(Math.random() * cards[2].keywords.length)];
+
+            const adviceTemplates = [
+                `✨ Ваши ресурсы сейчас: <strong>${k0}</strong> и <strong>${k1}</strong>. Главная цель — <strong>${k2}</strong>.`,
+                `🔮 Магическая формула успеха: <strong>${k0}</strong> + <strong>${k1}</strong> = <strong>${k2}</strong>.`,
+                `🗝️ Три ключа к ситуации: <strong>${k0}</strong>, <strong>${k1}</strong> и <strong>${k2}</strong>.`,
+                `🧘 Точки концентрации: <strong>${k0}</strong> и <strong>${k1}</strong>. Это приведет к состоянию: <strong>${k2}</strong>.`
+            ];
+
+            const synthesizedAdvice = adviceTemplates[Math.floor(Math.random() * adviceTemplates.length)];
+
+            return `
+                <div style="font-size:0.95rem; line-height:1.6; color:#e0e0e0; margin-bottom:15px; text-align: justify;">
+                    ${text}
+                </div>
+                <div style="border-left: 3px solid var(--accent-gold); padding-left: 10px; color: rgba(255,255,255,0.7); font-style: italic; font-size: 0.9rem;">
+                     ${synthesizedAdvice}
+                </div>
+            `;
         }
 
         function showResult(cards, spreadType, animate) {
@@ -802,6 +1121,13 @@
                 wrapper.style.alignItems = 'center';
                 wrapper.style.width = '100%';
 
+                // Initially hidden if animating
+                if (animate) {
+                    wrapper.style.opacity = '0';
+                    wrapper.style.transform = 'translateY(30px)';
+                    wrapper.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+                }
+
                 // Label
                 const badge = document.createElement('div');
                 badge.className = 'spread-position-label';
@@ -815,11 +1141,19 @@
                 }
                 wrapper.appendChild(badge);
 
+                // Position Description (for Celtic Cross and detailed spreads)
+                if (spreadMeta.descriptions && spreadMeta.descriptions[index]) {
+                    const desc = document.createElement('div');
+                    desc.style.cssText = 'font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-bottom: 8px; font-style: italic;';
+                    desc.textContent = spreadMeta.descriptions[index];
+                    wrapper.appendChild(desc);
+                }
+
                 // Card
                 const el = document.createElement('div');
                 el.className = 'result-card-container';
                 el.innerHTML = `
-                    <div class="result-card ${animate ? '' : 'flipped'}" style="transition-delay: ${index * 0.15}s">
+                    <div class="result-card">
                         <div class="card-face back"><i class="fa-solid fa-eye"></i></div>
                         <div class="card-face front">
                             <img src="${card.image}" class="card-image">
@@ -828,9 +1162,9 @@
                 `;
                 wrapper.appendChild(el);
 
-                // Info
+                // Info (initially hidden)
                 const info = document.createElement('div');
-                info.className = 'card-info';
+                info.className = 'card-info'; // starts invisible via CSS
                 info.innerHTML = `
                     <h3 style="margin-top:15px">${card.name}</h3>
                     <p class="card-short">${card.short}</p>
@@ -843,17 +1177,179 @@
 
                 container.appendChild(wrapper);
 
-                if (animate) {
-                    setTimeout(() => {
-                        const cardEl = el.querySelector('.result-card');
-                        if (cardEl) cardEl.classList.add('flipped');
-                    }, 100 + (index * 200));
-                }
+                // Store references for sequential animation
+                wrapper.dataset.cardIndex = index;
+                wrapper._cardEl = el;
+                wrapper._infoEl = info;
+                wrapper._wrapperEl = wrapper;
             });
+
+            // --- Interactive Card Reveal ---
+            if (animate && cardsToShow.length > 0) {
+                const wrappers = Array.from(container.querySelectorAll('[data-card-index]'));
+                let currentCardIndex = 0;
+
+                // For single card - no button needed, just reveal and done
+                if (wrappers.length === 1) {
+                    setTimeout(() => {
+                        const wrapper = wrappers[0];
+                        const cardEl = wrapper._cardEl?.querySelector('.result-card');
+                        const infoEl = wrapper._infoEl;
+
+                        // Step 1: Show wrapper (card back visible)
+                        setTimeout(() => {
+                            wrapper.style.opacity = '1';
+                            wrapper.style.transform = 'translateY(0)';
+
+                            // Step 2: Flip card
+                            setTimeout(() => {
+                                if (cardEl) cardEl.classList.add('flipped');
+
+                                // Step 3: Show info text
+                                setTimeout(() => {
+                                    if (infoEl) infoEl.classList.add('visible');
+
+                                    // Step 4: Show actions after pause (no auto-scroll)
+                                    setTimeout(() => {
+                                        const actionsEl = container.querySelector('.actions-block');
+                                        if (actionsEl) {
+                                            actionsEl.style.opacity = '1';
+                                            actionsEl.style.transform = 'translateY(0)';
+                                            // No auto-scroll - user can scroll manually
+                                        }
+                                    }, 1500);
+                                }, 800);
+                            }, 500);
+                        }, 300);
+                    }, 600);
+                } else {
+                    // Multiple cards - use button-driven reveal
+
+                    // Create "Next Card" button
+                    const nextCardBtn = document.createElement('button');
+                    nextCardBtn.className = 'btn btn-gold next-card-btn';
+                    nextCardBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Следующая карта';
+                    nextCardBtn.style.cssText = 'margin: 15px auto 0 auto; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease;';
+
+                    function revealCard(idx) {
+                        if (idx >= wrappers.length) {
+                            // All cards revealed - hide button
+                            nextCardBtn.style.display = 'none';
+
+                            // Show synthesis and actions after a pause
+                            setTimeout(() => {
+                                const synthEl = container.querySelector('.synthesis-block');
+                                if (synthEl) {
+                                    synthEl.classList.add('visible');
+                                    // Longer delay for smoother scroll after content renders
+                                    setTimeout(() => {
+                                        synthEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }, 600);
+                                }
+                            }, 800);
+
+                            setTimeout(() => {
+                                const actionsEl = container.querySelector('.actions-block');
+                                if (actionsEl) {
+                                    actionsEl.style.opacity = '1';
+                                    actionsEl.style.transform = 'translateY(0)';
+                                }
+                            }, 1200);
+                            return;
+                        }
+
+                        const wrapper = wrappers[idx];
+                        const cardEl = wrapper._cardEl?.querySelector('.result-card');
+                        const infoEl = wrapper._infoEl;
+
+                        // Remove button from previous position and hide
+                        if (nextCardBtn.parentNode) {
+                            nextCardBtn.style.opacity = '0';
+                            nextCardBtn.style.pointerEvents = 'none';
+                        }
+
+                        // No automatic scroll - wait for user interaction
+
+                        // Step 1: Show the wrapper (card appears with back facing)
+                        setTimeout(() => {
+                            wrapper.style.opacity = '1';
+                            wrapper.style.transform = 'translateY(0)';
+
+                            // Step 2: Flip the card
+                            setTimeout(() => {
+                                if (cardEl) cardEl.classList.add('flipped');
+
+                                // Step 3: Reveal info (text slides in)
+                                setTimeout(() => {
+                                    if (infoEl) infoEl.classList.add('visible');
+
+                                    // Step 4: Show button (slides in)
+                                    setTimeout(() => {
+                                        // Move button to be right after current wrapper
+                                        wrapper.after(nextCardBtn);
+
+                                        if (idx < wrappers.length - 1) {
+                                            // Ordinal words for card numbers
+                                            const ordinals = ['', '', 'вторую', 'третью', 'четвёртую', 'пятую', 'шестую', 'седьмую', 'восьмую', 'девятую', 'десятую'];
+                                            const cardWord = ordinals[idx + 2] || `${idx + 2}-ю`;
+                                            nextCardBtn.innerHTML = `<i class="fa-solid fa-eye"></i> Открыть ${cardWord} карту`;
+                                        } else {
+                                            nextCardBtn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Узнать толкование';
+                                        }
+                                        nextCardBtn.style.opacity = '1';
+                                        nextCardBtn.style.pointerEvents = 'auto';
+
+                                        // No auto-scroll to button - user controls the pace
+                                    }, 500);
+                                }, 800); // after flip starts
+                            }, 500); // after wrapper appears
+                        }, 300);
+
+                        currentCardIndex = idx;
+                    }
+
+                    // Button click handler - scroll then reveal
+                    nextCardBtn.onclick = () => {
+                        currentCardIndex++;
+
+                        // Scroll to next card first (if it exists)
+                        if (currentCardIndex < wrappers.length) {
+                            wrappers[currentCardIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+
+                        // Then reveal after scroll starts
+                        setTimeout(() => {
+                            revealCard(currentCardIndex);
+                        }, 300);
+                    };
+
+                    // Insert button initially after first wrapper (hidden)
+                    wrappers[0].after(nextCardBtn);
+
+                    // Start with first card
+                    setTimeout(() => {
+                        revealCard(0);
+                    }, 600);
+                }
+
+            } else {
+                // No animation - show all wrappers and card info immediately
+                container.querySelectorAll('[data-card-index]').forEach(w => {
+                    w.style.opacity = '1';
+                    w.style.transform = 'translateY(0)';
+                });
+                container.querySelectorAll('.card-info').forEach(info => info.classList.add('visible'));
+                // Also show actions immediately
+                const actionsEl = container.querySelector('.actions-block');
+                if (actionsEl) {
+                    actionsEl.style.opacity = '1';
+                    actionsEl.style.transform = 'translateY(0)';
+                }
+            }
 
             // --- Combined Synthesis (Interpretation) ---
             // Only show if we have > 1 card and they are all visible (not partial reveal)
-            if (!showAdButton && cardsToShow.length > 1 && spreadType === 'three') {
+            if (!showAdButton && cardsToShow.length > 1) {
                 const synthesisDiv = document.createElement('div');
                 synthesisDiv.style.width = '100%';
                 synthesisDiv.style.marginTop = '10px';
@@ -863,61 +1359,130 @@
                 synthesisDiv.style.borderRadius = '12px';
                 synthesisDiv.style.boxShadow = '0 0 15px rgba(255, 215, 0, 0.1)';
 
-                synthesisDiv.innerHTML = `
-                    <h3 style="color:var(--accent-gold); margin-top:0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
-                        <i class="fa-solid fa-scroll"></i> Общее толкование
-                    </h3>
-                    <p style="font-size:0.95rem; line-height:1.6; font-style: italic; color:#e0e0e0;">
-                        "Ваш путь начинается с энергии <strong>${cards[0].name}</strong> (${cards[0].short.toLowerCase()}). 
-                        В этой ситуации на вас влияет <strong>${cards[1].name}</strong>, принося ${cards[1].short.toLowerCase()}. 
-                        В итоге, если вы прислушаетесь к совету, вас ждет <strong>${cards[2].name}</strong>: ${cards[2].short.toLowerCase()}."
-                    </p>
-                `;
+                let synthesisHTML = '';
+
+                if (spreadType === 'three') {
+                    // 3-Card Combined Interpretation - Cohesive narrative
+                    synthesisHTML = `
+                        <h3 style="color:var(--accent-gold); margin-top:0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
+                            <i class="fa-solid fa-scroll"></i> Общее толкование
+                        </h3>
+                        ${generateSynthesis(cards)}
+                    `;
+                } else if (spreadType === 'cross') {
+                    // Celtic Cross Combined Interpretation (10 cards)
+                    synthesisHTML = `
+                        <h3 style="color:var(--accent-gold); margin-top:0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
+                            <i class="fa-solid fa-scroll"></i> Общее толкование Кельтского Креста
+                        </h3>
+                        
+                        <div style="margin-bottom:15px;">
+                            <h4 style="color:var(--accent-gold); margin:0 0 8px 0; font-size:0.9rem;">🎯 Суть ситуации</h4>
+                            <p style="font-size:0.9rem; line-height:1.6; color:#e0e0e0; margin:0;">
+                                <strong>${cards[0].name}</strong>: ${cards[0].full} 
+                                ${cards[1] ? `<br><br><strong>${cards[1].name}</strong> указывает на ${cards[1].short.toLowerCase()}.` : ''}
+                            </p>
+                        </div>
+
+                        <div style="margin-bottom:15px;">
+                            <h4 style="color:var(--accent-gold); margin:0 0 8px 0; font-size:0.9rem;">🌙 Глубинные силы</h4>
+                            <p style="font-size:0.9rem; line-height:1.6; color:#e0e0e0; margin:0;">
+                                ${cards[2] ? `Твой идеал — <strong>${cards[2].name}</strong>: ${cards[2].short.toLowerCase()}.` : ''} 
+                                ${cards[3] ? `Корни ситуации скрыты в энергии <strong>${cards[3].name}</strong> — ${cards[3].full}` : ''}
+                            </p>
+                        </div>
+
+                        <div style="margin-bottom:15px;">
+                            <h4 style="color:var(--accent-gold); margin:0 0 8px 0; font-size:0.9rem;">⏪ Прошлое → ⏩ Будущее</h4>
+                            <p style="font-size:0.9rem; line-height:1.6; color:#e0e0e0; margin:0;">
+                                ${cards[4] ? `Тебя сюда привела энергия <strong>${cards[4].name}</strong>.` : ''} 
+                                ${cards[5] ? `В ближайшем будущем появится влияние <strong>${cards[5].name}</strong> — ${cards[5].short.toLowerCase()}.` : ''}
+                            </p>
+                        </div>
+
+                        <div style="margin-bottom:15px;">
+                            <h4 style="color:var(--accent-gold); margin:0 0 8px 0; font-size:0.9rem;">🧘 Ты и твоё окружение</h4>
+                            <p style="font-size:0.9rem; line-height:1.6; color:#e0e0e0; margin:0;">
+                                ${cards[6] ? `Сейчас ты — <strong>${cards[6].name}</strong>: ${cards[6].short.toLowerCase()}.` : ''} 
+                                ${cards[7] ? `Окружающие влияют через энергию <strong>${cards[7].name}</strong> — ${cards[7].advice}` : ''}
+                            </p>
+                        </div>
+
+                        <div style="margin-bottom:15px;">
+                            <h4 style="color:var(--accent-gold); margin:0 0 8px 0; font-size:0.9rem;">💭 Надежды и страхи</h4>
+                            <p style="font-size:0.9rem; line-height:1.6; color:#e0e0e0; margin:0;">
+                                ${cards[8] ? `Твои скрытые желания и опасения выражены в <strong>${cards[8].name}</strong>: ${cards[8].full}` : ''}
+                            </p>
+                        </div>
+
+                        <div style="background:rgba(255,215,0,0.1); padding:15px; border-radius:8px; border-left:3px solid var(--accent-gold);">
+                            <h4 style="color:var(--accent-gold); margin:0 0 8px 0; font-size:1rem;">✨ Финальный итог</h4>
+                            <p style="font-size:1rem; line-height:1.7; color:#fff; margin:0; font-weight:500;">
+                                ${cards[9] ? `<strong>${cards[9].name}</strong>: ${cards[9].full}` : 'Итог раскроется после полного расклада.'}
+                            </p>
+                            <p style="font-size:0.85rem; color:var(--accent-gold); margin:10px 0 0 0; font-style:italic;">
+                                ${cards[9] ? `💡 Совет: ${cards[9].advice}` : ''}
+                            </p>
+                        </div>
+                    `;
+                }
+
+                synthesisDiv.innerHTML = synthesisHTML;
+                synthesisDiv.classList.add('synthesis-block');
                 container.appendChild(synthesisDiv);
+
+                // Capture for sharing - both HTML (for formatting) and text
+                state.lastSynthesisHTML = synthesisHTML;
+                state.lastSynthesisText = synthesisDiv.innerText;
+
+                // Note: synthesis reveal is now controlled by the "Next Card" button logic
+                // when all cards have been revealed
             }
 
-            // Actions Block
+            // Actions Block (initially hidden if animating)
             const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'actions-block';
             actionsDiv.style.width = '100%';
             actionsDiv.style.marginTop = '20px';
             actionsDiv.style.display = 'flex';
             actionsDiv.style.flexDirection = 'column';
             actionsDiv.style.gap = '15px';
 
+            // Hidden initially for animation (will be revealed by button reveal logic)
+            if (animate) {
+                actionsDiv.style.opacity = '0';
+                actionsDiv.style.transform = 'translateY(30px)';
+                actionsDiv.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+            }
+
             if (showAdButton) {
-                // "Reveal Future" Button - Thematic Text
-                const adBtn = document.createElement('button');
-                adBtn.className = 'btn';
-                adBtn.style.background = 'linear-gradient(45deg, #FFD700, #DAA520)';
-                adBtn.style.color = '#000';
-                adBtn.style.fontWeight = 'bold';
-                // "Reveal your future" - Mystical and inviting
-                adBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Раскрыть своё будущее (Видео)';
-                adBtn.onclick = watchAd;
-                actionsDiv.appendChild(adBtn);
+                // Classic Premium Block - EXACT copy from old version
+                const premiumBlock = document.createElement('div');
+                premiumBlock.className = 'premium-block';
+                premiumBlock.style.cssText = 'background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 15px; width: 100%; margin-bottom: 20px; position: relative; overflow: hidden; border: 1px solid rgba(255, 215, 0, 0.2);';
 
-                // Show Upsell HERE too (Step 2)
-                if (!state.isPremium) {
-                    const upsellDiv = document.createElement('div');
-                    upsellDiv.className = 'premium-block';
-                    upsellDiv.style.marginTop = '10px';
-                    upsellDiv.style.border = '1px solid rgba(255, 215, 0, 0.3)';
-                    upsellDiv.style.padding = '15px';
-                    upsellDiv.style.borderRadius = '12px';
-                    upsellDiv.style.background = 'rgba(255, 215, 0, 0.05)';
-                    upsellDiv.style.textAlign = 'center';
+                // Get the first card for preview
+                const previewCard = cards[0];
 
-                    upsellDiv.innerHTML = `
-                        <p style="font-size:0.8rem; color:#ccc; margin-bottom:10px;">
-                            <i class="fa-solid fa-crown" style="color:var(--accent-gold)"></i> 
-                            Premium пользователи видят всё сразу
-                        </p>
-                        <button class="btn" style="width:100%; font-size: 0.8rem; padding: 8px;" onclick="tg.showPopup({title:'Premium', message:'Покупка в разработке'})">
-                            Стать Premium
+                premiumBlock.innerHTML = `
+                    <h3 style="color:var(--accent-gold); margin:0 0 10px 0; font-family:'Cinzel',serif;">Глубинный смысл</h3>
+
+                    <div class="unlock-overlay">
+                        <button class="btn btn-gold" onclick="watchAd()">
+                            <i class="fa-solid fa-play"></i> Открыть за рекламу
                         </button>
-                    `;
-                    actionsDiv.appendChild(upsellDiv);
-                }
+                        <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.8;">Просмотр видео (3 сек)</p>
+                    </div>
+
+                    <div class="premium-content blurred">
+                        <p style="color:#e0e0e0; font-size:0.9rem; line-height:1.6; margin:0;">${previewCard.full}</p>
+                        <div class="advice-box">
+                            <span class="advice-label">Совет карт:</span>
+                            <span style="color:#ccc;">${previewCard.advice}</span>
+                        </div>
+                    </div>
+                `;
+                actionsDiv.appendChild(premiumBlock);
 
             } else {
                 // Full Result Logic
@@ -949,7 +1514,7 @@
                 if (!state.isPremium) {
                     // Free User -> Upsell
                     upsellDiv.innerHTML = `
-                        <h3 style="color:var(--accent-gold); margin:0 0 10px 0;"><i class="fa-solid fa-crown"></i> Mystic Premium</h3>
+                        <h3 style="color:var(--accent-gold); margin:0 0 10px 0;"><i class="fa-solid fa-crown"></i> INTARIUS Premium</h3>
                         <p style="font-size:0.9rem; color:#ccc; margin-bottom:15px;">
                             Хочешь узнать больше? Оформи Premium и открой расклад <strong>"Кельтский Крест"</strong> (10 карт) с полным анализом.
                         </p>
@@ -961,7 +1526,7 @@
                 } else if (spreadType !== 'cross') {
                     // Premium User -> Link to Cross
                     upsellDiv.innerHTML = `
-                        <h3 style="color:var(--accent-gold); margin:0 0 10px 0;"><i class="fa-solid fa-crown"></i> Mystic Premium</h3>
+                        <h3 style="color:var(--accent-gold); margin:0 0 10px 0;"><i class="fa-solid fa-crown"></i> INTARIUS Premium</h3>
                         <p style="font-size:0.9rem; color:#ccc; margin-bottom:15px;">
                             Ваш статус позволяет использовать полный расклад <strong>"Кельтский Крест"</strong>.
                         </p>
@@ -1021,7 +1586,46 @@
 
         function sharePrediction() {
             const url = "https://t.me/Intarius_bot";
-            const text = "Я открыл своё будущее в Mystic Tarot. Попробуй и ты!";
+
+            // Convert HTML to Telegram markdown
+            function htmlToTelegramMarkdown(html) {
+                if (!html) return "Карты открыли мне многое.";
+
+                let text = html
+                    // Convert <strong> and <b> to **bold**
+                    .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '*$1*')
+                    .replace(/<b[^>]*>(.*?)<\/b>/gi, '*$1*')
+                    // Convert <em> and <i> to _italic_
+                    .replace(/<em[^>]*>(.*?)<\/em>/gi, '_$1_')
+                    .replace(/<i[^>]*>(.*?)<\/i>/gi, '_$1_')
+                    // Convert <br> to newline
+                    .replace(/<br\s*\/?>/gi, '\n')
+                    // Convert block elements to newlines
+                    .replace(/<\/(p|div|h[1-6])>/gi, '\n')
+                    // Remove remaining HTML tags
+                    .replace(/<[^>]+>/g, '')
+                    // Clean up excessive newlines
+                    .replace(/\n{3,}/g, '\n\n')
+                    // Decode HTML entities
+                    .replace(/&nbsp;/g, ' ')
+                    .replace(/&amp;/g, '&')
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    .replace(/&quot;/g, '"')
+                    .trim();
+
+                return text;
+            }
+
+            // Build coherent share message with formatting
+            let shareBody = htmlToTelegramMarkdown(state.lastSynthesisHTML);
+
+            // Truncate if too long (Telegram limit ~4096, but URL params are shorter ~2000 safe)
+            if (shareBody.length > 500) {
+                shareBody = shareBody.substring(0, 497) + "...";
+            }
+
+            const text = `🔮 *INTARIUS: Моё предсказание*\n\n${shareBody}\n\n✨ Попробуй и ты!`;
             const fullUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
             tg.openTelegramLink ? tg.openTelegramLink(fullUrl) : window.open(fullUrl, '_blank');
         }
@@ -1052,4 +1656,3 @@
 </body>
 
 </html>
-```
