@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mystic Tarot</title>
+    <!-- Telegram WebApp -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color-start: #1a0b2e;
+            --bg-color-end: #000000;
+            --accent-gold: #ffd700;
+            --accent-purple: #4b0082;
+            --text-main: #ffffff;
+            --text-secondary: #cccccc;
+            --card-width: 200px;
+            --card-height: 320px;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Lato', sans-serif;
+            background: radial-gradient(circle at center, var(--bg-color-start), var(--bg-color-end));
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Background Particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: twinkle 4s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 0.2;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(1.5);
+            }
+        }
+
+        /* Main Container */
+        .app-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--accent-gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            text-align: center;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Home Screen */
+        .deck-container {
+            margin-top: 40px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-back {
+            width: var(--card-width);
+            height: var(--card-height);
+            background: linear-gradient(135deg, #2d1b4e 0%, #1a0b2e 100%);
+            border: 2px solid var(--accent-gold);
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(75, 0, 130, 0.5), inset 0 0 15px rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
+            animation: breath 3s infinite ease-in-out;
+        }
+
+        .card-back::after {
+            content: '';
+            position: absolute;
+            width: 80%;
+            height: 90%;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .card-back i {
+            font-size: 3rem;
+            color: var(--accent-gold);
+            opacity: 0.8;
+        }
+
+        @keyframes breath {
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(75, 0, 130, 0.5);
+            }
+
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+            }
+        }
+
+        .card-shaking {
+            animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+        }
+
+        @keyframes shake {
+
+            10%,
+            90% {
+                transform: translate3d(-1px, 0, 0);
+            }
+
+            20%,
+            80% {
+                transform: translate3d(2px, 0, 0);
+            }
+
+            30%,
+            50%,
+            70% {
+                transform: translate3d(-4px, 0, 0);
+            }
+
+            40%,
+            60% {
+                transform: translate3d(4px, 0, 0);
+            }
+        }
+
+        /* Result Screen */
+        .result-card-container {
+            perspective: 1000px;
+            width: var(--card-width);
+            height: var(--card-height);
+            margin-bottom: 20px;
+        }
+
+        .result-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s, top 1s;
+            animation: cardAppear 1s ease-out forwards;
+        }
+
+        /* 3D Flip */
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            border: 2px solid var(--accent-gold);
+            overflow: hidden;
+        }
+
+        .card-face.front {
+            background: #1a0b2e;
+            transform: rotateY(180deg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-face.back {
+            background: linear-gradient(135deg, #2d1b4e 0%, #1a0b2e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-face.back i {
+            font-size: 3rem;
+            color: var(--accent-gold);
+        }
+
+        .result-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        @keyframes cardAppear {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .card-info {
+            text-align: center;
+            width: 100%;
+            padding: 0 10px;
+        }
+
+        .card-short {
+            margin-bottom: 20px;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        .premium-block {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            width: 100%;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .premium-content {
+            transition: filter 0.5s ease;
+        }
+
+        .blurred {
+            filter: blur(8px);
+            user-select: none;
+        }
+
+        .unlock-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 5;
+            transition: opacity 0.3s;
+        }
+
+        .unlock-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4b0082, #2d1b4e);
+            border: 1px solid var(--accent-gold);
+            color: var(--text-main);
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            margin: 5px 0;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-gold {
+            background: linear-gradient(45deg, var(--accent-gold), #b8860b);
+            color: #000;
+            border: none;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-share {
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9rem;
+        }
+
+        .advice-box {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .advice-label {
+            color: var(--accent-gold);
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Loading Overlay for Ad */
+        .ad-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--accent-gold);
+        }
+
+        .ad-loader.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 215, 0, 0.3);
+            border-top: 4px solid var(--accent-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Stars Background -->
+    <div class="particles" id="particles"></div>
+
+    <div class="app-container">
+        <!-- Home Screen -->
+        <div id="home-screen" class="screen">
+            <h1>Карта твоего дня</h1>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 30px;">
+                Сосредоточься на своем вопросе или просто позволь Вселенной дать знак.
+            </p>
+
+            <div class="deck-container" id="deck" onclick="drawCard()">
+                <div class="card-back">
+                    <i class="fa-solid fa-eye"></i>
+                </div>
+            </div>
+
+            <p style="margin-top: 30px; font-size: 0.9rem; opacity: 0.7;">
+                Нажми на колоду, чтобы вытянуть карту
+            </p>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="screen">
+            <div class="result-card-container">
+                <div class="result-card" id="result-card-el">
+                    <div class="card-face back">
+                        <i class="fa-solid fa-eye"></i>
+                    </div>
+                    <div class="card-face front">
+                        <img id="card-img" src="" alt="Card" class="card-image">
+                    </div>
+                </div>
+            </div>
+
+            <h2 id="card-name">...</h2>
+
+            <div class="card-info">
+                <p id="card-short" class="card-short">...</p>
+
+                <!-- Monetization / Premium Block -->
+                <div class="premium-block">
+                    <h3>Глубинный смысл</h3>
+
+                    <div class="unlock-overlay" id="blur-overlay">
+                        <button class="btn btn-gold" onclick="watchAd()">
+                            <i class="fa-solid fa-play"></i> Открыть за рекламу
+                        </button>
+                        <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.8;">Просмотр видео (3 сек)</p>
+                    </div>
+
+                    <div class="premium-content blurred" id="premium-text">
+                        <p id="card-full">...</p>
+                        <div class="advice-box">
+                            <span class="advice-label">Совет карт:</span>
+                            <span id="card-advice">...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-share" onclick="sharePrediction()">
+                    <i class="fa-brands fa-telegram"></i> Поделиться предсказанием
+                </button>
+
+                <button class="btn btn-share"
+                    style="border:none; background:transparent; opacity: 0.5; font-size: 0.8rem;" onclick="resetApp()">
+                    (Dev: Сброс)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fake Ad UI -->
+    <div class="ad-loader" id="ad-loader">
+        <div class="spinner"></div>
+        <h3>Смотрим рекламу...</h3>
+        <p>Магия загружается</p>
+    </div>
+
+    <script>
+        // --- Data ---
+        const TAROT_DATA = [
+            {
+                "id": 0,
+                "name": "0. Шут (The Fool)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/9/90/RWS_Tarot_00_Fool.jpg",
+                "short": "Новое начало, спонтанность, безумная мудрость. Прыжок в неизвестность.",
+                "full": "Шут олицетворяет начало пути, полного возможностей и опасностей. Это момент, когда нужно довериться Вселенной и сделать шаг вперед, не зная, что ждет впереди. Ваш внутренний ребенок готов к приключениям.",
+                "advice": "Рискните и начните что-то новое, не боясь показаться глупым."
+            },
+            {
+                "id": 1,
+                "name": "I. Маг (The Magician)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/d/de/RWS_Tarot_01_Magician.jpg",
+                "short": "Мастерство, сила воли, материализация идей.",
+                "full": "У вас есть все необходимые инструменты и ресурсы для достижения цели. Маг напоминает, что вы — творец своей реальности. Сосредоточьте свою волю и действуйте.",
+                "advice": "Действуйте активно и используйте свои таланты."
+            },
+            {
+                "id": 2,
+                "name": "II. Жрица (The High Priestess)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/8/88/RWS_Tarot_02_High_Priestess.jpg",
+                "short": "Интуиция, тайное знание, подсознание, пассивность.",
+                "full": "Ответы, которые вы ищете, находятся внутри вас. Жрица призывает к тишине и наблюдению. Доверяйте своим снам и предчувствиям больше, чем логике.",
+                "advice": "Прислушайтесь к своей интуиции и храните свои секреты."
+            },
+            {
+                "id": 3,
+                "name": "III. Императрица (The Empress)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/d/d2/RWS_Tarot_03_Empress.jpg",
+                "short": "Плодородие, изобилие, творчество, забота.",
+                "full": "Императрица — это воплощение женской созидательной энергии. Это время роста, процветания и наслаждения красотой жизни. Ваши проекты принесут плоды.",
+                "advice": "Творите, любите и заботьтесь о себе."
+            },
+            {
+                "id": 4,
+                "name": "IV. Император (The Emperor)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/c/c3/RWS_Tarot_04_Emperor.jpg",
+                "short": "Власть, структура, дисциплина, стабильность.",
+                "full": "Ситуация требует порядка и твердой руки. Император символизирует авторитет и логическое мышление. Установите границы и следуйте плану.",
+                "advice": "Возьмите ситуацию под контроль и действуйте организованно."
+            },
+            {
+                "id": 5,
+                "name": "V. Иерофант (The Hierophant)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/8/8d/RWS_Tarot_05_Hierophant.jpg",
+                "short": "Традиция, духовное руководство, обучение, вера.",
+                "full": "Иерофант указывает на важность традиций и духовных ценностей. Возможно, стоит обратиться за советом к наставнику или следовать проверенному пути.",
+                "advice": "Следуйте правилам и учитесь у мудрых."
+            },
+            {
+                "id": 6,
+                "name": "VI. Влюбленные (The Lovers)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/d/db/RWS_Tarot_06_Lovers.jpg",
+                "short": "Любовь, гармония, выбор, партнерство.",
+                "full": "Эта карта говорит о глубокой связи и важном выборе. Это может касаться отношений или моральных ценностей. Слушайте свое сердце, оно укажет верный путь.",
+                "advice": "Делайте выбор, основываясь на любви и гармонии."
+            },
+            {
+                "id": 7,
+                "name": "VII. Колесница (The Chariot)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/9/9b/RWS_Tarot_07_Chariot.jpg",
+                "short": "Победа, контроль, решимость, движение вперед.",
+                "full": "Вы движетесь к победе, но путь требует полной концентрации и самоконтроля. Возьмите поводья в свои руки и не позволяйте сомнениям сбить вас с пути.",
+                "advice": "Двигайтесь вперед смело и уверенно."
+            },
+            {
+                "id": 8,
+                "name": "VIII. Сила (Strength)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/f/f5/RWS_Tarot_08_Strength.jpg",
+                "short": "Внутренняя сила, мужество, сострадание, терпение.",
+                "full": "Истинная сила проявляется не в агрессии, а в мягкости и терпении. Вы способны преодолеть любые трудности силой своего духа и любви.",
+                "advice": "Будьте терпеливы и проявите великодушие."
+            },
+            {
+                "id": 9,
+                "name": "IX. Отшельник (The Hermit)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/4/4d/RWS_Tarot_09_Hermit.jpg",
+                "short": "Уединение, самоанализ, поиск истины, мудрость.",
+                "full": "Пришло время остановиться и заглянуть внутрь себя. Ответы, которые вы ищете, можно найти только в тишине и уединении.",
+                "advice": "Побудьте наедине с собой и разберитесь в своих мыслях."
+            },
+            {
+                "id": 10,
+                "name": "X. Колесо Фортуны (Wheel of Fortune)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg",
+                "short": "Судьба, перемены, везучесть, циклы жизни.",
+                "full": "Все меняется. Колесо вращается, принося то взлеты, то падения. Доверьтесь потоку жизни и знайте, что перемены неизбежны и ведут к лучшему.",
+                "advice": "Будьте готовы к неожиданным поворотам судьбы."
+            },
+            {
+                "id": 11,
+                "name": "XI. Справедливость (Justice)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/e/e0/RWS_Tarot_11_Justice.jpg",
+                "short": "Истина, закон, ответственность, равновесие.",
+                "full": "Каждое действие имеет последствия. Справедливость призывает к честности перед собой и другими. Решение будет принят объективно.",
+                "advice": "Поступайте честно и берите ответственность за свои действия."
+            },
+            {
+                "id": 12,
+                "name": "XII. Повешенный (The Hanged Man)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/2/2b/RWS_Tarot_12_Hanged_Man.jpg",
+                "short": "Жертва, новый взгляд, ожидание, принятие.",
+                "full": "Иногда нужно остановиться и посмотреть на мир под другим углом. То, что кажется тупиком, может быть возможностью для глубокого прозрения.",
+                "advice": "Измените свою точку зрения и не торопите события."
+            },
+            {
+                "id": 13,
+                "name": "XIII. Смерть (Death)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/d/d7/RWS_Tarot_13_Death.jpg",
+                "short": "Трансформация, конец, освобождение, новое начало.",
+                "full": "Не бойтесь конца, ибо он всегда предвещает новое начало. Отпустите то, что отжило свое, чтобы в вашу жизнь могло войти что-то новое и прекрасное.",
+                "advice": "Отпустите прошлое без сожаления."
+            },
+            {
+                "id": 14,
+                "name": "XIV. Умеренность (Temperance)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/f/f8/RWS_Tarot_14_Temperance.jpg",
+                "short": "Баланс, гармония, терпение, исцеление.",
+                "full": "Найдите золотую середину. Умеренность учит нас избегать крайностей и искать гармонию во всем. Ваше исцеление в спокойствии и равновесии.",
+                "advice": "Соблюдайте меру и ищите компромиссы."
+            },
+            {
+                "id": 15,
+                "name": "XV. Дьявол (The Devil)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/5/55/RWS_Tarot_15_Devil.jpg",
+                "short": "Искушение, зависимость, материализм, страхи.",
+                "full": "Вы можете чувствовать себя в ловушке своих желаний или страхов. Осознайте, что эти цепи часто мы создаем сами. Пришло время освободиться.",
+                "advice": "Осознайте свои слабости и не дайте им управлять вами."
+            },
+            {
+                "id": 16,
+                "name": "XVI. Башня (The Tower)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/5/53/RWS_Tarot_16_Tower.jpg",
+                "short": "Разрушение, катастрофа, внезапные перемены, прозрение.",
+                "full": "Ложные структуры рушатся, чтобы освободить место для истины. Это может быть болезненно, но это необходимо для вашего роста. Примите очищающую бурю.",
+                "advice": "Не цепляйтесь за старое, позвольте ему уйти."
+            },
+            {
+                "id": 17,
+                "name": "XVII. Звезда (The Star)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/d/db/RWS_Tarot_17_Star.jpg",
+                "short": "Надежда, вдохновение, духовность, исцеление.",
+                "full": "Путeводная звезда светит вам. Это время исцеления и возобновления надежд. Верьте в себя и свое будущее, Вселенная поддерживает вас.",
+                "advice": "Верьте в свою мечту и следуйте за вдохновением."
+            },
+            {
+                "id": 18,
+                "name": "XVIII. Луна (The Moon)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/7/7f/RWS_Tarot_18_Moon.jpg",
+                "short": "Иллюзии, интуиция, страхи, неопределенность.",
+                "full": "В лунном свете все кажется иным. Доверяйте своим инстинктам, но остерегайтесь самообмана и иллюзий. Путь может быть неясен, идите осторожно.",
+                "advice": "Будьте внимательны и доверяйте своему чутью."
+            },
+            {
+                "id": 19,
+                "name": "XIX. Солнце (The Sun)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/1/17/RWS_Tarot_19_Sun.jpg",
+                "short": "Радость, успех, позитив, жизненная сила.",
+                "full": "Солнце освещает вашу жизнь радостью и успехом. Это время для счастья, ясности и теплых отношений. Наслаждайтесь моментом.",
+                "advice": "Сияйте и делитесь своей радостью с миром."
+            },
+            {
+                "id": 20,
+                "name": "XX. Суд (Judgement)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/d/dd/RWS_Tarot_20_Judgement.jpg",
+                "short": "Возрождение, призыв, прощение, пробуждение.",
+                "full": "Пришло время подвести итоги и возродиться к новой жизни. Оставьте прошлое позади и откликнитесь на призыв своей судьбы.",
+                "advice": "Простите себя и других, начните с чистого листа."
+            },
+            {
+                "id": 21,
+                "name": "XXI. Мир (The World)",
+                "image": "https://upload.wikimedia.org/wikipedia/en/f/ff/RWS_Tarot_21_World.jpg",
+                "short": "Завершение, целостность, гармония, достижение.",
+                "full": "Вы пришли к финишу и достигли цели. Мир у ваших ног. Это момент триумфа и гармонии с вселенной.",
+                "advice": "Празднуйте свои достижения и наслаждайтесь полнотой жизни."
+            }
+        ];
+
+        // --- State & Constants ---
+        const tg = window.Telegram.WebApp;
+        const KEYS = {
+            DATE: 'mystic_tarot_last_date',
+            CARD_ID: 'mystic_tarot_card_id',
+            AD_WATCHED: 'mystic_tarot_ad_watched'
+        };
+
+        // --- Init ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            createParticles();
+        });
+
+        function initApp() {
+            // Telegram Init
+            tg.expand();
+            tg.ready();
+
+            // Theme params check (optional sync)
+            if (tg.colorScheme === 'dark') {
+                document.documentElement.style.setProperty('--bg-color-start', '#1a0b2e');
+            }
+
+            // Check storage
+            const today = new Date().toISOString().split('T')[0];
+            const lastDate = localStorage.getItem(KEYS.DATE);
+
+            if (lastDate === today) {
+                // Already drawn today
+                const cardId = parseInt(localStorage.getItem(KEYS.CARD_ID));
+                const adWatched = localStorage.getItem(KEYS.AD_WATCHED) === 'true';
+                showResult(cardId, adWatched, false); // false = no animation
+            } else {
+                // New day
+                showScreen('home-screen');
+            }
+        }
+
+        // --- Core Logic ---
+
+        function drawCard() {
+            // Prevent double clicks
+            const deck = document.getElementById('deck');
+            if (deck.classList.contains('processing')) return;
+            deck.classList.add('processing');
+
+            // 1. Shake animation
+            const cardBack = deck.querySelector('.card-back');
+            cardBack.classList.remove('card-shaking');
+            void cardBack.offsetWidth; // trigger reflow
+            cardBack.classList.add('card-shaking');
+
+            // 2. Wait for shake, then generate result
+            setTimeout(() => {
+                // Random Card
+                const randomIndex = Math.floor(Math.random() * TAROT_DATA.length);
+                const card = TAROT_DATA[randomIndex];
+
+                // Save state
+                const today = new Date().toISOString().split('T')[0];
+                localStorage.setItem(KEYS.DATE, today);
+                localStorage.setItem(KEYS.CARD_ID, card.id);
+                localStorage.setItem(KEYS.AD_WATCHED, 'false');
+
+                // Show Result with animation
+                showResult(card.id, false, true); // true = animate flip
+            }, 600);
+        }
+
+        function showResult(cardId, adWatched, animate) {
+            const card = TAROT_DATA.find(c => c.id === cardId) || TAROT_DATA[0];
+
+            // Fill Data
+            document.getElementById('card-name').textContent = card.name;
+            document.getElementById('card-img').src = card.image;
+            document.getElementById('card-short').textContent = card.short;
+            document.getElementById('card-full').textContent = card.full;
+            document.getElementById('card-advice').textContent = card.advice;
+
+            // Ad Status
+            if (adWatched) {
+                unlockPremiumContent();
+            } else {
+                lockPremiumContent();
+            }
+
+            showScreen('result-screen');
+
+            // Flip Animation logic
+            const resultCardEl = document.getElementById('result-card-el');
+            if (animate) {
+                // Start unflipped
+                resultCardEl.classList.remove('flipped');
+                // Wait a moment for layout then flip
+                setTimeout(() => {
+                    resultCardEl.classList.add('flipped');
+                }, 100);
+            } else {
+                // Immediate
+                resultCardEl.classList.add('flipped');
+            }
+        }
+
+        // --- Monetization ---
+
+        function watchAd() {
+            // Simulate Ad
+            const loader = document.getElementById('ad-loader');
+            loader.classList.add('active');
+
+            setTimeout(() => {
+                loader.classList.remove('active');
+
+                // Success
+                localStorage.setItem(KEYS.AD_WATCHED, 'true');
+                unlockPremiumContent();
+
+                // Optional: Haptic feedback
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+            }, 3000);
+        }
+
+        function unlockPremiumContent() {
+            document.getElementById('premium-text').classList.remove('blurred');
+            document.getElementById('blur-overlay').classList.add('hidden');
+        }
+
+        function lockPremiumContent() {
+            document.getElementById('premium-text').classList.add('blurred');
+            document.getElementById('blur-overlay').classList.remove('hidden');
+        }
+
+        // --- Sharing ---
+
+        function sharePrediction() {
+            const cardId = localStorage.getItem(KEYS.CARD_ID);
+            const card = TAROT_DATA.find(c => c.id == cardId);
+
+            let text = `✨ Intarius расскажет твое будущее.\n\nМне выпала карта: ${card ? card.name : 'Таро'}!`;
+            const url = "https://t.me/Intarius_bot";
+
+            // Encode
+            const fullUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+
+            if (tg.openTelegramLink) {
+                tg.openTelegramLink(fullUrl);
+            } else {
+                window.open(fullUrl, '_blank');
+            }
+        }
+
+        // --- Utils ---
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const particleCount = 30;
+
+            for (let i = 0; i < particleCount; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+
+                // Random Pos
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const size = Math.random() * 3 + 1; // 1-4px
+                const duration = Math.random() * 3 + 2; // 2-5s
+                const delay = Math.random() * 5;
+
+                star.style.left = x + '%';
+                star.style.top = y + '%';
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.animationDuration = duration + 's';
+                star.style.animationDelay = delay + 's';
+
+                container.appendChild(star);
+            }
+        }
+
+        function resetApp() {
+            if (confirm('Сбросить прогресс и начать заново?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+    </script>
+</body>
+
+</html>
