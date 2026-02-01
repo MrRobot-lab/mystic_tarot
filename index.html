@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://adsgram.ai/js/adsgram.js?blockId=int-22202"></script>
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
     <style>
         :root {
@@ -979,44 +979,48 @@
         }
 
         function watchAd() {
-            // Adsgram Integration
+            // DEBUG: Step 1 - Function called
+            alert('DEBUG 1: watchAd called');
 
-            // Fallback unlock function
             const unlockContent = () => {
+                alert('DEBUG: unlockContent called - Unlocking!');
                 state.adWatched = true;
                 localStorage.setItem(KEYS.AD_WATCHED, 'true');
-
-                // Refresh
                 const lastDraw = JSON.parse(localStorage.getItem(KEYS.LAST_DRAW));
                 if (lastDraw) showResult(lastDraw.cards, state.selectedSpread, true);
             };
 
             try {
+                // DEBUG: Step 2 - Check SDK
+                alert('DEBUG 2: Checking window.Adsgram... Exists: ' + (!!window.Adsgram));
+
                 if (!window.Adsgram) {
-                    console.warn("Adsgram SDK not loaded. Fallback unlock.");
-                    unlockContent();
+                    alert('DEBUG: SDK NOT FOUND!');
                     return;
                 }
 
-                const AdController = window.Adsgram.init({ blockId: "int-22202" });
+                // DEBUG: Step 3 - Init
+                alert('DEBUG 3: Calling Adsgram.init...');
+                const AdController = window.Adsgram.init({ blockId: "int-22202", debug: true });
+                alert('DEBUG 4: AdController created: ' + (!!AdController));
+
+                // DEBUG: Step 5 - Show
+                alert('DEBUG 5: Calling AdController.show()...');
 
                 AdController.show().then((result) => {
+                    alert('DEBUG 6: show() resolved. result.done = ' + result.done);
                     if (result.done) {
-                        // Success: User watched till end
-                        tg.showPopup({ title: 'Судьба открыта', message: 'Вселенная благодарит вас за терпение.' });
                         unlockContent();
                     } else {
-                        // Skipped or closed early
-                        tg.showPopup({ title: 'Внимание', message: 'Чтобы узнать судьбу, нужно досмотреть видео до конца.' });
+                        alert('DEBUG: User skipped ad.');
                     }
                 }).catch((err) => {
-                    // Error (e.g. 504, 400, no ads) - Benevolent Fallback
-                    console.error("Adsgram Show Error:", err);
-                    tg.showPopup({ title: 'Магия', message: 'Реклама не загрузилась, но звезды все равно решили открыть вам путь!' });
+                    alert('DEBUG 7: show() REJECTED. Error: ' + JSON.stringify(err));
                     unlockContent();
                 });
+
             } catch (e) {
-                console.error("Critical Ad Error:", e);
+                alert('DEBUG CATCH: Exception! ' + e.message);
                 unlockContent();
             }
         }
