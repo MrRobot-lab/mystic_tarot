@@ -979,7 +979,8 @@
         }
 
         function watchAd() {
-            // Adsgram Integration (Production)
+            // Adsgram Integration - Following official documentation pattern
+            // https://docs.adsgram.ai/publisher/reward-interstitial-code-examples
 
             const unlockContent = () => {
                 state.adWatched = true;
@@ -988,35 +989,34 @@
                 if (lastDraw) showResult(lastDraw.cards, state.selectedSpread, true);
             };
 
-            try {
-                if (!window.Adsgram) {
-                    // SDK not loaded - fallback unlock
-                    console.warn("Adsgram SDK not loaded.");
+            if (!window.Adsgram) {
+                console.warn("Adsgram SDK not loaded - fallback unlock");
+                unlockContent();
+                return;
+            }
+
+            // Initialize AdController (only needs to be done once per blockId)
+            const AdController = window.Adsgram.init({ blockId: "int-22202" });
+
+            // Show ad - .then() = watched to end, .catch() = skipped or error
+            AdController.show()
+                .then((result) => {
+                    // User watched ad till the end
+                    console.log("Ad watched successfully:", result);
+                    tg.showPopup({ title: 'Судьба открыта', message: 'Вселенная благодарит вас за терпение.' });
                     unlockContent();
-                    return;
-                }
-
-                const AdController = window.Adsgram.init({ blockId: "int-22202" });
-
-                AdController.show().then((result) => {
-                    if (result.done) {
-                        // User watched to end
-                        tg.showPopup({ title: 'Судьба открыта', message: 'Вселенная благодарит вас за терпение.' });
+                })
+                .catch((result) => {
+                    // User skipped ad or error occurred
+                    console.log("Ad skipped or error:", result);
+                    if (result.error) {
+                        // Error - unlock as fallback
                         unlockContent();
                     } else {
-                        // User skipped
+                        // User skipped - don't unlock, show warning
                         tg.showPopup({ title: 'Внимание', message: 'Чтобы узнать судьбу, нужно досмотреть видео до конца.' });
                     }
-                }).catch((err) => {
-                    // Ad error - fallback unlock
-                    console.error("Adsgram error:", err);
-                    unlockContent();
                 });
-
-            } catch (e) {
-                console.error("Ad exception:", e);
-                unlockContent();
-            }
         }
 
         function sharePrediction() {
