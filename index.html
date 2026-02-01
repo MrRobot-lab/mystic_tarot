@@ -979,11 +979,9 @@
         }
 
         function watchAd() {
-            // DEBUG: Step 1 - Function called
-            alert('DEBUG 1: watchAd called');
+            // Adsgram Integration (Production)
 
             const unlockContent = () => {
-                alert('DEBUG: unlockContent called - Unlocking!');
                 state.adWatched = true;
                 localStorage.setItem(KEYS.AD_WATCHED, 'true');
                 const lastDraw = JSON.parse(localStorage.getItem(KEYS.LAST_DRAW));
@@ -991,36 +989,32 @@
             };
 
             try {
-                // DEBUG: Step 2 - Check SDK
-                alert('DEBUG 2: Checking window.Adsgram... Exists: ' + (!!window.Adsgram));
-
                 if (!window.Adsgram) {
-                    alert('DEBUG: SDK NOT FOUND!');
+                    // SDK not loaded - fallback unlock
+                    console.warn("Adsgram SDK not loaded.");
+                    unlockContent();
                     return;
                 }
 
-                // DEBUG: Step 3 - Init
-                alert('DEBUG 3: Calling Adsgram.init...');
-                const AdController = window.Adsgram.init({ blockId: "int-22202", debug: true });
-                alert('DEBUG 4: AdController created: ' + (!!AdController));
-
-                // DEBUG: Step 5 - Show
-                alert('DEBUG 5: Calling AdController.show()...');
+                const AdController = window.Adsgram.init({ blockId: "int-22202" });
 
                 AdController.show().then((result) => {
-                    alert('DEBUG 6: show() resolved. result.done = ' + result.done);
                     if (result.done) {
+                        // User watched to end
+                        tg.showPopup({ title: 'Судьба открыта', message: 'Вселенная благодарит вас за терпение.' });
                         unlockContent();
                     } else {
-                        alert('DEBUG: User skipped ad.');
+                        // User skipped
+                        tg.showPopup({ title: 'Внимание', message: 'Чтобы узнать судьбу, нужно досмотреть видео до конца.' });
                     }
                 }).catch((err) => {
-                    alert('DEBUG 7: show() REJECTED. Error: ' + JSON.stringify(err));
+                    // Ad error - fallback unlock
+                    console.error("Adsgram error:", err);
                     unlockContent();
                 });
 
             } catch (e) {
-                alert('DEBUG CATCH: Exception! ' + e.message);
+                console.error("Ad exception:", e);
                 unlockContent();
             }
         }
