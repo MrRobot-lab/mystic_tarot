@@ -343,7 +343,7 @@ function showResult(cards, spreadType, animate) {
             const nextCardBtn = document.createElement('button');
             nextCardBtn.className = 'btn btn-gold next-card-btn';
             nextCardBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Следующая карта';
-            nextCardBtn.style.cssText = 'margin: 15px auto 0 auto; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease;';
+            nextCardBtn.style.cssText = 'margin: 5px auto 0 auto; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease;';
 
             function revealCard(idx) {
                 if (idx >= wrappers.length) {
