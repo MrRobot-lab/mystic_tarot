@@ -3,7 +3,7 @@
 # Запуск: bash set_webhook.sh
 
 BOT_TOKEN="8367087520:AAGbp4dtdOKHKQ6N5vUg7TFzQTJVXeFVAiI"
-WEBHOOK_URL="https://104.238.24.57.nip.io/webhook"
+WEBHOOK_URL="https://104.238.24.57.nip.io:8443/webhook"
 
 echo "🔗 Установка Webhook: $WEBHOOK_URL"
 

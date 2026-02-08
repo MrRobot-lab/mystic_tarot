@@ -741,6 +741,7 @@ function showResult(cards, spreadType, animate) {
         const shareBtn = document.createElement('button');
         shareBtn.className = 'btn btn-share';
         shareBtn.innerHTML = '<i class="fa-brands fa-telegram"></i> Чтобы предсказание исполнилось,<br>отправь манифестацию близкому';
+
         shareBtn.onclick = sharePrediction;
         actionsDiv.appendChild(shareBtn);
 
