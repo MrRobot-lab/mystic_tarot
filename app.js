@@ -832,28 +832,15 @@ function sharePrediction() {
     const botUrl = "https://t.me/Intarius_bot";
     const advice = state.lastAdvice || "Доверься своей интуиции";
 
-    // 1. Try Inline Share (allows choosing friend)
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        // Truncate advice to 200 chars (Telegram limit is 256)
-        let query = advice;
-        if (query.length > 200) query = query.substring(0, 200) + "...";
-
-        try {
-            tg.switchInlineQuery(query);
-        } catch (e) {
-            tg.showAlert("Ошибка Inline: " + e.message);
-            fallbackShare(botUrl, advice);
-        }
-    } else {
-        // 2. Fallback (Browser / No User ID)
-        fallbackShare(botUrl, advice);
-    }
-}
-
-function fallbackShare(botUrl, advice) {
-    const text = `🔮 **INTARIUS** — приоткрыл мне завесу\n\n**Судьба мне благоволит — пожелай, чтобы это исполнилось.**\n\nМой совет на день: **${advice}**\n\n✨ Узнай свою судьбу и ты ${botUrl}`;
+    // Use simple link sharing (opens chat picker with pre-filled text)
+    const text = `🔮 **INTARIUS** — приоткрыл мне завесу\n\n**Судьба мне благоволит — пожелай, чтобы это исполнилось.**\n\nМой совет на день: **${advice}**\n\n✨ Узнай свою судьбу и ты @Intarius_bot`;
     const fullUrl = `https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(text)}`;
-    tg.openTelegramLink ? tg.openTelegramLink(fullUrl) : window.open(fullUrl, '_blank');
+
+    if (tg.openTelegramLink) {
+        tg.openTelegramLink(fullUrl);
+    } else {
+        window.open(fullUrl, '_blank');
+    }
 }
 
 // --- Utils ---
