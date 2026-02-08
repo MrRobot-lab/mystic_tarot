@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>INTARIUS</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Open+Sans:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Background Effects -->
+    <div class="bg-gradient"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- Dev Button -->
+    <button id="dev-btn" class="dev-btn" onclick="togglePremium()">DEV: Free User</button>
+
+    <div class="app-container">
+        <!-- Home Screen -->
+        <div id="home-screen" class="screen">
+            <h1>Карта твоего дня</h1>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">
+                Сосредоточься на вопросе
+            </p>
+
+            <div class="deck-container" id="deck" onclick="tryDraw()">
+                <div class="card-back">
+                    <i class="fa-solid fa-eye"></i>
+                </div>
+            </div>
+
+            <!-- Spread Selector (Hidden for Single Entry Flow) -->
+            <div class="spread-selector" style="display: none;">
+                <div class="spread-option selected" id="opt-one" onclick="selectSpread('one')">
+                    <i class="fa-solid fa-note-sticky"></i>
+                    <div class="spread-info">
+                        <h4>Карта дня</h4>
+                        <p>Совет на сегодня</p>
+                    </div>
+                </div>
+
+                <div class="spread-option" id="opt-three" onclick="selectSpread('three')">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <div class="spread-info">
+                        <h4>ТРИАДА</h4>
+                        <p>Причина • Ситуация • Исход</p>
+                    </div>
+                    <span class="badge badge-ad" id="badge-three">AD</span>
+                </div>
+
+                <div class="spread-option locked" id="opt-cross" onclick="selectSpread('cross')">
+                    <i class="fa-solid fa-cross"></i>
+                    <div class="spread-info">
+                        <h4>Кельтский крест</h4>
+                        <p>Полный анализ (10 карт)</p>
+                    </div>
+                    <span class="badge badge-locked" id="badge-cross"><i class="fa-solid fa-lock"></i></span>
+                </div>
+            </div>
+
+            <p style="margin: 20px 0; font-size: 0.9rem; opacity: 0.7;">
+                Нажми на колоду для начала
+            </p>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="screen">
+            <h2 id="result-title" style="margin-bottom: 20px;">Результат</h2>
+
+            <div id="cards-container" class="cards-layout">
+                <!-- Cards will be injected here -->
+            </div>
+
+            <button class="btn btn-share" onclick="sharePrediction()">
+                <i class="fa-brands fa-telegram"></i> Поделиться предсказанием
+            </button>
+            <button class="btn btn-share" style="border:none; background:transparent; opacity: 0.5;"
+                onclick="resetApp()">
+                Сброс (Новый день)
+            </button>
+        </div>
+    </div>
+
+    <!-- Ad UI -->
+    <div class="ad-loader" id="ad-loader">
+        <div class="spinner"></div>
+        <h3>Смотрим рекламу...</h3>
+        <p>Магия загружается</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="tarot-data.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
