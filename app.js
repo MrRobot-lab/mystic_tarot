@@ -834,8 +834,16 @@ function sharePrediction() {
 
     // 1. Try Inline Share (allows choosing friend)
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        // Opens chat selection with pre-filled query
-        tg.switchInlineQuery(advice);
+        // Truncate advice to 200 chars (Telegram limit is 256)
+        let query = advice;
+        if (query.length > 200) query = query.substring(0, 200) + "...";
+
+        try {
+            tg.switchInlineQuery(query);
+        } catch (e) {
+            tg.showAlert("Ошибка Inline: " + e.message);
+            fallbackShare(botUrl, advice);
+        }
     } else {
         // 2. Fallback (Browser / No User ID)
         fallbackShare(botUrl, advice);
