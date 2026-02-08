@@ -831,30 +831,10 @@ function sharePrediction() {
     const botUrl = "https://t.me/Intarius_bot";
     const advice = state.lastAdvice || "Доверься своей интуиции";
 
-    // 1. Try Backend Share (if in Telegram)
+    // 1. Try Inline Share (allows choosing friend)
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        const userId = tg.initDataUnsafe.user.id;
-
-        fetch('https://104.238.24.57.nip.io/api/share', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: userId,
-                advice: advice
-            })
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    tg.showAlert("Сообщение отправлено тебе в чат с ботом! Перешли его другу.");
-                } else {
-                    fallbackShare(botUrl, advice);
-                }
-            })
-            .catch(err => {
-                console.error("Share error:", err);
-                fallbackShare(botUrl, advice);
-            });
+        // Opens chat selection with pre-filled query
+        tg.switchInlineQuery(advice);
     } else {
         // 2. Fallback (Browser / No User ID)
         fallbackShare(botUrl, advice);
