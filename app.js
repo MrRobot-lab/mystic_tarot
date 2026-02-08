@@ -67,21 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateUI();
 
-    // Restore Draw - but always animate! (user request)
-    const today = new Date().toISOString().split('T')[0];
-    const lastDraw = JSON.parse(localStorage.getItem(KEYS.LAST_DRAW));
-
-    if (lastDraw && lastDraw.date === today) {
-        state.selectedSpread = lastDraw.spreadType;
-        state.adWatched = localStorage.getItem(KEYS.AD_WATCHED) === 'true';
-        if (state.isPremium) state.adWatched = true;
-
-        // Always animate - даже при восстановлении
-        showResult(lastDraw.cards, lastDraw.spreadType, true);
-    } else {
-        localStorage.setItem(KEYS.AD_WATCHED, 'false');
-        showScreen('home-screen');
-    }
+    // Always start fresh - show card back, ready for new flip
+    showScreen('home-screen');
 
     // Create particles
     createParticles();
@@ -131,41 +118,191 @@ function startCrossReading() {
 
 function performDraw() {
     const deck = document.getElementById('deck');
+    const deckCard = document.getElementById('deck-card');
+    const deckFront = document.getElementById('deck-front');
+
     if (deck.classList.contains('processing')) return;
+
+    // If already flipped, don't allow re-draw
+    if (deckCard.classList.contains('flipped')) return;
+
     deck.classList.add('processing');
 
-    const cardBack = deck.querySelector('.card-back');
+    // Generate card data
+    const srcDeck = state.isPremium ? FULL_DECK : MAJOR_ARCANA;
+    const spreadMeta = SPREAD_INFO[state.selectedSpread];
+    const count = spreadMeta.count;
 
-    setTimeout(() => {
-        cardBack.classList.add('card-shaking');
-    }, 300);
+    const shuffled = [...srcDeck].sort(() => 0.5 - Math.random());
+    const resultCards = shuffled.slice(0, count).map(card => ({
+        ...card,
+        isReversed: Math.random() < 0.1  // 10% chance reversed
+    }));
 
-    setTimeout(() => {
-        cardBack.classList.remove('card-shaking');
-        deck.classList.remove('processing');
+    const today = new Date().toISOString().split('T')[0];
+    localStorage.setItem(KEYS.LAST_DRAW, JSON.stringify({
+        date: today,
+        spreadType: state.selectedSpread,
+        cards: resultCards
+    }));
 
-        const srcDeck = state.isPremium ? FULL_DECK : MAJOR_ARCANA;
-        const spreadMeta = SPREAD_INFO[state.selectedSpread];
-        const count = spreadMeta.count;
+    state.adWatched = false;
+    localStorage.setItem(KEYS.AD_WATCHED, 'false');
 
-        const shuffled = [...srcDeck].sort(() => 0.5 - Math.random());
-        const resultCards = shuffled.slice(0, count).map(card => ({
-            ...card,
-            isReversed: Math.random() < 0.1  // 10% шанс перевёрнутой карты
-        }));
+    // For single card spread - flip on home screen
+    if (count === 1 || (state.selectedSpread === 'three' && !state.isPremium && !state.adWatched)) {
+        const card = resultCards[0];
+        const isReversed = card.isReversed;
+        const imgStyle = isReversed ? 'transform: rotate(180deg);' : '';
 
-        const today = new Date().toISOString().split('T')[0];
-        localStorage.setItem(KEYS.LAST_DRAW, JSON.stringify({
-            date: today,
-            spreadType: state.selectedSpread,
-            cards: resultCards
-        }));
+        // Set front face image
+        deckFront.innerHTML = `<img src="${card.image}" style="${imgStyle}" alt="${card.name}">`;
 
-        state.adWatched = false;
-        localStorage.setItem(KEYS.AD_WATCHED, 'false');
+        // Hide tap hint
+        const tapHint = document.getElementById('tap-hint');
+        if (tapHint) tapHint.style.display = 'none';
 
-        showResult(resultCards, state.selectedSpread, true);
-    }, 1800);
+        // Flip the card
+        setTimeout(() => {
+            deckCard.classList.add('flipped');
+            deck.classList.remove('processing');
+
+            // Show result info after flip
+            setTimeout(() => {
+                showHomeResult(resultCards, state.selectedSpread);
+            }, 800);
+        }, 300);
+    } else {
+        // For multi-card spreads - use result screen
+        setTimeout(() => {
+            deck.classList.remove('processing');
+            showResult(resultCards, state.selectedSpread, true);
+        }, 500);
+    }
+}
+
+// Show result on home screen (for single card)
+function showHomeResult(cards, spreadType) {
+    const container = document.getElementById('home-result-container');
+    const infoContainer = document.getElementById('card-info-container');
+    const actionsContainer = document.getElementById('actions-container');
+
+    const card = cards[0];
+    const spreadMeta = SPREAD_INFO[spreadType];
+    const isReversed = card.isReversed;
+
+    const cardName = isReversed ? `${card.name} ↺` : card.name;
+    const shortText = isReversed ? (card.reversedShort || card.short) : card.short;
+    const fullText = isReversed ? (card.reversedFull || card.full) : card.full;
+    const adviceText = isReversed ? (card.reversedAdvice || card.advice) : card.advice;
+    const reversedBadge = isReversed ? '<span style="background:#8b0000; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.7rem; margin-left:8px;">Перевёрнута</span>' : '';
+
+    // Build card info
+    infoContainer.innerHTML = `
+        <div class="card-info visible" style="opacity: 1; transform: translateY(0);">
+            <h3 style="margin-top:5px; margin-bottom:5px; color: var(--accent-gold);">${cardName}${reversedBadge}</h3>
+            <p class="card-short" style="margin:0 0 10px 0;">${shortText}</p>
+            <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; width:100%; text-align:left; font-size:0.85rem; line-height:1.5;">
+                <strong style="color:var(--accent-gold);">Значение:</strong> ${fullText}<br><br>
+                <strong style="color:var(--accent-gold);">Совет:</strong> ${adviceText}
+            </div>
+        </div>
+    `;
+
+    // Build actions
+    let actionsHTML = '';
+
+    // Check if we need to show ad button for remaining cards
+    if (spreadType === 'three' && !state.isPremium && !state.adWatched) {
+        const previewCard = card;
+        actionsHTML = `
+            <div class="premium-block" style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 15px; width: 100%; margin-bottom: 20px; position: relative; overflow: hidden; border: 1px solid rgba(255, 215, 0, 0.2);">
+                <h3 style="color:var(--accent-gold); margin:0 0 10px 0; font-family:'Cinzel',serif;">Глубинный смысл</h3>
+
+                <div class="unlock-overlay">
+                    <button class="btn btn-gold" onclick="watchAd()">
+                        <i class="fa-solid fa-play"></i> Открыть за рекламу
+                    </button>
+                    <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.8;">Просмотр видео (3 сек)</p>
+                </div>
+
+                <div class="premium-content blurred">
+                    <p style="color:#e0e0e0; font-size:0.9rem; line-height:1.6; margin:0;">${previewCard.full}</p>
+                    <div class="advice-box">
+                        <span class="advice-label">Совет карт:</span>
+                        <span style="color:#ccc;">${previewCard.advice}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        actionsHTML = `
+            <button class="btn btn-share" onclick="sharePrediction()">
+                <i class="fa-brands fa-telegram"></i> Поделиться предсказанием
+            </button>
+            <button class="btn btn-share" style="border:none; background:transparent; opacity: 0.5;" onclick="resetApp()">
+                Сброс (Новый день)
+            </button>
+        `;
+
+        // Premium upsell for non-premium users or Celtic Cross promotion
+        if (!state.isPremium) {
+            actionsHTML += `
+                <div class="premium-block" style="margin-top: 20px; border: 1px solid var(--accent-gold); padding: 20px; border-radius: 12px; background: rgba(255, 215, 0, 0.05); text-align: center;">
+                    <h3 style="color:var(--accent-gold); margin:0 0 10px 0;"><i class="fa-solid fa-crown"></i> INTARIUS Premium</h3>
+                    <p style="font-size:0.9rem; color:#ccc; margin-bottom:15px;">
+                        Хочешь узнать больше? Оформи Premium и открой расклад <strong>"Кельтский Крест"</strong> (10 карт).
+                    </p>
+                    <button class="btn" style="width:100%; justify-content:center;" onclick="tg.showPopup({title:'Premium', message:'Покупка в разработке'})">
+                        Оформить Premium
+                    </button>
+                </div>
+            `;
+        } else if (spreadType !== 'cross') {
+            actionsHTML += `
+                <div class="premium-block" style="margin-top: 20px; border: 1px solid var(--accent-gold); padding: 20px; border-radius: 12px; background: rgba(255, 215, 0, 0.05); text-align: center;">
+                    <h3 style="color:var(--accent-gold); margin:0 0 10px 0;"><i class="fa-solid fa-crown"></i> INTARIUS Premium</h3>
+                    <p style="font-size:0.9rem; color:#ccc; margin-bottom:15px;">
+                        Ваш статус позволяет использовать полный расклад <strong>"Кельтский Крест"</strong>.
+                    </p>
+                    <button class="btn" style="width:100%; justify-content:center;" onclick="startCrossReading()">
+                        Открыть Кельтский Крест (10 карт)
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    actionsContainer.innerHTML = actionsHTML;
+
+    // Show the container
+    container.style.display = 'flex';
+}
+
+// Restore card state after app restart (same day)
+function restoreHomeCard(cards, spreadType) {
+    const deckCard = document.getElementById('deck-card');
+    const deckFront = document.getElementById('deck-front');
+    const tapHint = document.getElementById('tap-hint');
+
+    const card = cards[0];
+    const isReversed = card.isReversed;
+    const imgStyle = isReversed ? 'transform: rotate(180deg);' : '';
+
+    // Set front face image
+    deckFront.innerHTML = `<img src="${card.image}" style="${imgStyle}" alt="${card.name}">`;
+
+    // Hide tap hint
+    if (tapHint) tapHint.style.display = 'none';
+
+    // Flip immediately (no animation for restore)
+    deckCard.classList.add('flipped');
+
+    // Show result info
+    showHomeResult(cards, spreadType);
+
+    // Make sure we're on home screen
+    showScreen('home-screen');
 }
 
 // --- Narrative Engine ---
@@ -298,11 +435,18 @@ function showResult(cards, spreadType, animate) {
         `;
         wrapper.appendChild(info);
 
+        // Pre-create hidden button placeholder to prevent layout shift
+        const btnPlaceholder = document.createElement('div');
+        btnPlaceholder.className = 'next-card-btn-container';
+        btnPlaceholder.style.cssText = 'width: 100%; min-height: 50px;';
+        wrapper.appendChild(btnPlaceholder);
+
         container.appendChild(wrapper);
 
         wrapper.dataset.cardIndex = index;
         wrapper._cardEl = el;
         wrapper._infoEl = info;
+        wrapper._btnContainer = btnPlaceholder;
     });
 
     // --- Interactive Card Reveal ---
@@ -343,7 +487,7 @@ function showResult(cards, spreadType, animate) {
             const nextCardBtn = document.createElement('button');
             nextCardBtn.className = 'btn btn-gold next-card-btn';
             nextCardBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Следующая карта';
-            nextCardBtn.style.cssText = 'margin-top: 2px; width: 100%; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease;';
+            nextCardBtn.style.cssText = 'margin-top: 2px; width: 100%; opacity: 0; transition: opacity 0.4s ease;';
 
             function revealCard(idx) {
                 if (idx >= wrappers.length) {
@@ -352,10 +496,11 @@ function showResult(cards, spreadType, animate) {
                     setTimeout(() => {
                         const synthEl = container.querySelector('.synthesis-block');
                         if (synthEl) {
-                            synthEl.classList.add('visible');
+                            // Scroll first, then reveal
+                            synthEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
                             setTimeout(() => {
-                                synthEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }, 600);
+                                synthEl.classList.add('visible');
+                            }, 500);
                         }
                     }, 800);
 
@@ -389,7 +534,9 @@ function showResult(cards, spreadType, animate) {
                             if (infoEl) infoEl.classList.add('visible');
 
                             setTimeout(() => {
-                                wrapper.appendChild(nextCardBtn);
+                                const btnContainer = wrapper._btnContainer;
+                                btnContainer.innerHTML = '';
+                                btnContainer.appendChild(nextCardBtn);
 
                                 if (idx < wrappers.length - 1) {
                                     const ordinals = ['', '', 'вторую', 'третью', 'четвёртую', 'пятую', 'шестую', 'седьмую', 'восьмую', 'девятую', 'десятую'];
@@ -410,15 +557,16 @@ function showResult(cards, spreadType, animate) {
 
             nextCardBtn.onclick = () => {
                 currentCardIndex++;
+                // Scroll first, then reveal after scroll completes
                 if (currentCardIndex < wrappers.length) {
                     wrappers[currentCardIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
                 setTimeout(() => {
                     revealCard(currentCardIndex);
-                }, 300);
+                }, 500); // Wait for scroll to mostly complete
             };
 
-            wrappers[0].appendChild(nextCardBtn);
+            wrappers[0]._btnContainer.appendChild(nextCardBtn);
             setTimeout(() => {
                 revealCard(0);
             }, 600);

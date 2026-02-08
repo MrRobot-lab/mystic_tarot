@@ -24,14 +24,19 @@
     <div class="app-container">
         <!-- Home Screen -->
         <div id="home-screen" class="screen">
-            <h1>Карта твоего дня</h1>
+            <h1>Твой день олицетворяет...</h1>
             <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">
                 Сосредоточься на вопросе
             </p>
 
             <div class="deck-container" id="deck" onclick="tryDraw()">
-                <div class="card-back">
-                    <i class="fa-solid fa-eye"></i>
+                <div class="deck-card" id="deck-card">
+                    <div class="deck-card-face deck-back">
+                        <i class="fa-solid fa-eye"></i>
+                    </div>
+                    <div class="deck-card-face deck-front" id="deck-front">
+                        <!-- Card image will be injected here -->
+                    </div>
                 </div>
             </div>
 
@@ -64,26 +69,28 @@
                 </div>
             </div>
 
-            <p style="margin: 20px 0; font-size: 0.9rem; opacity: 0.7;">
+            <p id="tap-hint" style="margin: 20px 0; font-size: 0.9rem; opacity: 0.7;">
                 Нажми на колоду для начала
             </p>
+
+            <!-- Result container (appears after flip) -->
+            <div id="home-result-container" class="home-result-container" style="display: none;">
+                <div id="card-info-container">
+                    <!-- Card info will be injected here -->
+                </div>
+                <div id="actions-container">
+                    <!-- Actions will be injected here -->
+                </div>
+            </div>
         </div>
 
-        <!-- Result Screen -->
+        <!-- Result Screen (kept for multi-card spreads) -->
         <div id="result-screen" class="screen">
             <h2 id="result-title" style="margin-bottom: 20px;">Результат</h2>
 
             <div id="cards-container" class="cards-layout">
                 <!-- Cards will be injected here -->
             </div>
-
-            <button class="btn btn-share" onclick="sharePrediction()">
-                <i class="fa-brands fa-telegram"></i> Поделиться предсказанием
-            </button>
-            <button class="btn btn-share" style="border:none; background:transparent; opacity: 0.5;"
-                onclick="resetApp()">
-                Сброс (Новый день)
-            </button>
         </div>
     </div>
 

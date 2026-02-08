@@ -159,6 +159,96 @@ h3 {
     }
 }
 
+/* Deck Card Flip Animation */
+.deck-card {
+    width: var(--card-width);
+    height: var(--card-height);
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 1.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.deck-card.flipped {
+    transform: rotateY(180deg);
+}
+
+.deck-card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 12px;
+    border: 2px solid var(--accent-gold);
+    overflow: hidden;
+}
+
+.deck-back {
+    background: linear-gradient(135deg, #2d1b4e 0%, #1a0b2e 100%);
+    box-shadow: 0 0 20px rgba(75, 0, 130, 0.5), inset 0 0 15px rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: breath 3s infinite ease-in-out;
+}
+
+.deck-back::after {
+    content: '';
+    position: absolute;
+    width: 80%;
+    height: 90%;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 8px;
+}
+
+.deck-back i {
+    font-size: 3rem;
+    color: var(--accent-gold);
+    opacity: 0.8;
+}
+
+.deck-front {
+    background: #1a0b2e;
+    transform: rotateY(180deg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.3), 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.deck-front img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 5px;
+}
+
+.deck-card.flipped .deck-back {
+    animation: none;
+}
+
+/* Home result container */
+.home-result-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .card-shaking {
     animation: flipCard 1s ease-in-out both;
 }
@@ -375,13 +465,11 @@ h3 {
     padding: 0 10px;
     margin-bottom: 10px;
     opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    transition: opacity 0.8s ease-out;
 }
 
 .card-info.visible {
     opacity: 1;
-    transform: translateY(0);
 }
 
 /* Scroll offset for top bar */
