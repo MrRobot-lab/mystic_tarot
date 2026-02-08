@@ -217,22 +217,15 @@ function showHomeResult(cards, spreadType) {
         const previewCard = card;
         actionsHTML = `
             <div class="premium-block" style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 15px; width: 100%; margin-bottom: 20px; position: relative; overflow: hidden; border: 1px solid rgba(255, 215, 0, 0.2);">
-                <h3 style="color:var(--accent-gold); margin:0 0 10px 0; font-family:'Cinzel',serif;">Глубинный смысл</h3>
+                <h3 style="color:var(--accent-gold); margin:0 0 10px 0; font-family:'Cinzel',serif;">Расклад "Триада"</h3>
+                <p style="color:#ccc; font-size:0.9rem; margin:0 0 15px 0; line-height:1.5;">
+                    Может рассказать тебе больше. Хочешь приоткрыть завесу? Сосредоточься на вопросе и жми кнопку ниже.
+                </p>
 
-                <div class="unlock-overlay">
-                    <button class="btn btn-gold" onclick="watchAd()">
-                        <i class="fa-solid fa-play"></i> Открыть за рекламу
-                    </button>
-                    <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.8;">Просмотр видео (3 сек)</p>
-                </div>
-
-                <div class="premium-content blurred">
-                    <p style="color:#e0e0e0; font-size:0.9rem; line-height:1.6; margin:0;">${previewCard.full}</p>
-                    <div class="advice-box">
-                        <span class="advice-label">Совет карт:</span>
-                        <span style="color:#ccc;">${previewCard.advice}</span>
-                    </div>
-                </div>
+                <button class="btn btn-gold" onclick="watchAd()" style="width:100%;">
+                    <i class="fa-solid fa-play"></i> Открыть за рекламу
+                </button>
+                <p style="font-size: 0.75rem; margin-top: 8px; opacity: 0.6; text-align:center;">Просмотр видео (3 сек)</p>
             </div>
         `;
     } else {
