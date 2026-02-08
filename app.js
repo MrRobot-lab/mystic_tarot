@@ -9,7 +9,8 @@ let state = {
     selectedSpread: 'three',
     adWatched: false,
     lastSynthesisHTML: '',
-    lastSynthesisText: ''
+    lastSynthesisText: '',
+    lastAdvice: ''
 };
 
 const SPREAD_INFO = {
@@ -93,6 +94,29 @@ function updateUI() {
         btn.textContent = state.isPremium ? 'DEV: Premium User' : 'DEV: Free User';
         btn.classList.toggle('premium-badge', state.isPremium);
     }
+}
+
+// --- Sticky Promo Functions ---
+function showStickyPromo() {
+    // Don't show if premium or ad already watched
+    if (state.isPremium || state.adWatched) return;
+
+    const promo = document.getElementById('sticky-promo');
+    if (promo) {
+        promo.classList.add('visible');
+    }
+}
+
+function hideStickyPromo() {
+    const promo = document.getElementById('sticky-promo');
+    if (promo) {
+        promo.classList.remove('visible');
+    }
+}
+
+function watchAdFromSticky() {
+    hideStickyPromo();
+    watchAd();
 }
 
 function showScreen(id) {
@@ -198,6 +222,17 @@ function showHomeResult(cards, spreadType) {
     const reversedBadge = isReversed ? '<span style="background:#8b0000; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.7rem; margin-left:8px;">Перевёрнута</span>' : '';
 
     // Build card info
+    const synthesisHTML = `
+        <h4>Общее толкование</h4>
+        <p>${shortText}</p>
+        <p><strong>Значение:</strong> ${fullText}</p>
+        <p><strong>Совет:</strong> ${adviceText}</p>
+    `;
+
+    // Save for sharing
+    state.lastSynthesisHTML = synthesisHTML;
+    state.lastAdvice = adviceText;
+
     infoContainer.innerHTML = `
         <div class="card-info visible" style="opacity: 1; transform: translateY(0);">
             <h3 style="margin-top:5px; margin-bottom:5px; color: var(--accent-gold);">${cardName}${reversedBadge}</h3>
@@ -212,26 +247,18 @@ function showHomeResult(cards, spreadType) {
     // Build actions
     let actionsHTML = '';
 
-    // Check if we need to show ad button for remaining cards
+    // For triada upsell - now handled by sticky promo, so just show basic actions
     if (spreadType === 'three' && !state.isPremium && !state.adWatched) {
-        const previewCard = card;
+        // Minimal actions when sticky promo is shown
         actionsHTML = `
-            <div class="premium-block" style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 15px; width: 100%; margin-bottom: 20px; position: relative; overflow: hidden; border: 1px solid rgba(255, 215, 0, 0.2);">
-                <h3 style="color:var(--accent-gold); margin:0 0 10px 0; font-family:'Cinzel',serif;">Расклад "Триада"</h3>
-                <p style="color:#ccc; font-size:0.9rem; margin:0 0 15px 0; line-height:1.5;">
-                    Может рассказать тебе больше. Хочешь приоткрыть завесу? Сосредоточься на вопросе и жми кнопку ниже.
-                </p>
-
-                <button class="btn btn-gold" onclick="watchAd()" style="width:100%;">
-                    <i class="fa-solid fa-play"></i> Открыть за рекламу
-                </button>
-                <p style="font-size: 0.75rem; margin-top: 8px; opacity: 0.6; text-align:center;">Просмотр видео (3 сек)</p>
-            </div>
+            <button class="btn btn-share" onclick="sharePrediction()">
+                <i class="fa-brands fa-telegram"></i> Чтобы предсказание исполнилось,<br>отправь манифестацию близкому
+            </button>
         `;
     } else {
         actionsHTML = `
             <button class="btn btn-share" onclick="sharePrediction()">
-                <i class="fa-brands fa-telegram"></i> Поделиться предсказанием
+                <i class="fa-brands fa-telegram"></i> Чтобы предсказание исполнилось,<br>отправь манифестацию близкому
             </button>
             <button class="btn btn-share" style="border:none; background:transparent; opacity: 0.5;" onclick="resetApp()">
                 Сброс (Новый день)
@@ -270,6 +297,11 @@ function showHomeResult(cards, spreadType) {
 
     // Show the container
     container.style.display = 'flex';
+
+    // Show sticky promo after a short delay
+    setTimeout(() => {
+        showStickyPromo();
+    }, 1500);
 }
 
 // Restore card state after app restart (same day)
@@ -708,7 +740,7 @@ function showResult(cards, spreadType, animate) {
     } else {
         const shareBtn = document.createElement('button');
         shareBtn.className = 'btn btn-share';
-        shareBtn.innerHTML = '<i class="fa-brands fa-telegram"></i> Поделиться предсказанием';
+        shareBtn.innerHTML = '<i class="fa-brands fa-telegram"></i> Чтобы предсказание исполнилось,<br>отправь манифестацию близкому';
         shareBtn.onclick = sharePrediction;
         actionsDiv.appendChild(shareBtn);
 
@@ -796,38 +828,42 @@ function watchAd() {
 
 // --- Share ---
 function sharePrediction() {
-    const url = "https://t.me/Intarius_bot";
+    const botUrl = "https://t.me/Intarius_bot";
+    const advice = state.lastAdvice || "Доверься своей интуиции";
 
-    function htmlToTelegramMarkdown(html) {
-        if (!html) return "Карты открыли мне многое.";
+    // 1. Try Backend Share (if in Telegram)
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        const userId = tg.initDataUnsafe.user.id;
 
-        let text = html
-            .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '*$1*')
-            .replace(/<b[^>]*>(.*?)<\/b>/gi, '*$1*')
-            .replace(/<em[^>]*>(.*?)<\/em>/gi, '_$1_')
-            .replace(/<i[^>]*>(.*?)<\/i>/gi, '_$1_')
-            .replace(/<br\s*\/?>/gi, '\n')
-            .replace(/<\/(p|div|h[1-6])>/gi, '\n')
-            .replace(/<[^>]+>/g, '')
-            .replace(/\n{3,}/g, '\n\n')
-            .replace(/&nbsp;/g, ' ')
-            .replace(/&amp;/g, '&')
-            .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>')
-            .replace(/&quot;/g, '"')
-            .trim();
-
-        return text;
+        fetch('https://104.238.24.57.nip.io/api/share', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: userId,
+                advice: advice
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    tg.showAlert("Сообщение отправлено тебе в чат с ботом! Перешли его другу.");
+                } else {
+                    fallbackShare(botUrl, advice);
+                }
+            })
+            .catch(err => {
+                console.error("Share error:", err);
+                fallbackShare(botUrl, advice);
+            });
+    } else {
+        // 2. Fallback (Browser / No User ID)
+        fallbackShare(botUrl, advice);
     }
+}
 
-    let shareBody = htmlToTelegramMarkdown(state.lastSynthesisHTML);
-
-    if (shareBody.length > 500) {
-        shareBody = shareBody.substring(0, 497) + "...";
-    }
-
-    const text = `🔮 *INTARIUS: Моё предсказание*\n\n${shareBody}\n\n✨ Попробуй и ты!`;
-    const fullUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+function fallbackShare(botUrl, advice) {
+    const text = `🔮 **INTARIUS** — приоткрыл мне завесу\n\n**Судьба мне благоволит — пожелай, чтобы это исполнилось.**\n\nМой совет на день: **${advice}**\n\n✨ Узнай свою судьбу и ты ${botUrl}`;
+    const fullUrl = `https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(text)}`;
     tg.openTelegramLink ? tg.openTelegramLink(fullUrl) : window.open(fullUrl, '_blank');
 }
 

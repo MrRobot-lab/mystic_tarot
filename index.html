@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Open+Sans:wght@400;600&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="styles.css?v=4">
 </head>
 
 <body>
@@ -92,6 +92,25 @@
     </div>
 
     <!-- Ad UI -->
+    <!-- Sticky Triada Promo -->
+    <div class="sticky-promo" id="sticky-promo">
+        <button class="sticky-promo-close" onclick="hideStickyPromo()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="sticky-promo-content">
+            <div class="sticky-promo-icon">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div class="sticky-promo-text">
+                <h4>Расклад "Триада"</h4>
+                <p>Может рассказать тебе больше. Хочешь приоткрыть завесу? Сосредоточься на вопросе и жми кнопку</p>
+            </div>
+            <button class="sticky-promo-btn" onclick="watchAdFromSticky()">
+                <i class="fa-solid fa-play"></i> Открыть
+            </button>
+        </div>
+    </div>
+
     <div class="ad-loader" id="ad-loader">
         <div class="spinner"></div>
         <h3>Смотрим рекламу...</h3>
@@ -99,8 +118,8 @@
     </div>
 
     <!-- Scripts -->
-    <script src="tarot-data.js?v=2"></script>
-    <script src="app.js?v=2"></script>
+    <script src="tarot-data.js?v=4"></script>
+    <script src="app.js?v=4"></script>
 </body>
 
 </html>
