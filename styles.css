@@ -189,6 +189,7 @@ h3 {
     justify-content: center;
     align-items: center;
     animation: breath 3s infinite ease-in-out;
+    z-index: 2;
 }
 
 .deck-back::after {
